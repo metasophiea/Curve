@@ -60,7 +60,7 @@
                 };
             };
             _canvas_.library = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2021,m:1,d:13} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2021,m:3,d:8} };
                 const library = this;
                 
                 const dev = {
@@ -4148,8 +4148,9 @@
                                                 
                                                         //collector
                                                             const input = inputs[0];
-                                                            this._stepData.push(...input[0]);
-                                                            
+                                                            if( inputs[0].length != 0){
+                                                                this._stepData.push(...input[0]);
+                                                            }
                                                 
                                                 
                                                         if( currentTime - this._lastUpdate > this._state.frequency.timePerStep ){

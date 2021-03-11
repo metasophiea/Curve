@@ -8,5 +8,5 @@
 // {{include:0.js}} //workshop
 // {{include:1.js}} //alpha units
 // {{include:2.js}} //curveTech units
-{{include:3.js}} //harbinger units
-// {{include:4.js}} //acoustic research units
+// {{include:3.js}} //harbinger units
+{{include:4.js}} //acoustic research units

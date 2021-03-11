@@ -116,7 +116,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
             };
         };
         _canvas_.library = new function(){
-            this.versionInformation = { tick:0, lastDateModified:{y:2021,m:1,d:13} };
+            this.versionInformation = { tick:0, lastDateModified:{y:2021,m:3,d:8} };
             const library = this;
             
             const dev = {
@@ -4204,8 +4204,9 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                             
                                                     //collector
                                                         const input = inputs[0];
-                                                        this._stepData.push(...input[0]);
-                                                        
+                                                        if( inputs[0].length != 0){
+                                                            this._stepData.push(...input[0]);
+                                                        }
                                             
                                             
                                                     if( currentTime - this._lastUpdate > this._state.frequency.timePerStep ){
@@ -58508,56 +58509,28 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
         // {{include:0.js}} //workshop
         // {{include:1.js}} //alpha units
         // {{include:2.js}} //curveTech units
+        // {{include:3.js}} //harbinger units
         _canvas_.layers.registerFunctionForLayer("curve", function(){
-            _canvas_.core.render.frameRateLimit(10);
+            // _canvas_.core.render.frameRateLimit(10);
         
-            // const dsds = _canvas_.control.scene.addUnit(10,100,0,'dsds-8^3','harbinger');
-            // const pg = _canvas_.control.scene.addUnit(10,300,0,'pulse_generator','alpha');
-            // pg.io.signal.output.connectTo( dsds.io.signal.signal_in_0 );
-            // pg.i.tempo(60)
-        
-        
-            // const mrd = _canvas_.control.scene.addUnit(10,180,0,'mrd-16','harbinger');
-            const rdp = _canvas_.control.scene.addUnit(10,180,0,'rdp-32','harbinger');
-        
-            // setTimeout( () => {
-            //     const rdp2 = _canvas_.control.scene.addUnit(10,180,0,'rdp-32','harbinger');
-            // },1000);
-        
-            // for(let a = 0; a < 8; a++){
-            //     mrd.io.signal['signal_out_'+a].connectTo(dsds.io.signal['signal_in_'+a]);
-            // }
-        
-        
-            // const pulse = _canvas_.control.scene.addUnit(370,120,0,'pulse_generator','alpha');
-            // const amp = _canvas_.control.scene.addUnit(-150,-150,0,'amplifier','alpha');
-            // const dup = _canvas_.control.scene.addUnit(60,-60,0,'audio_duplicator','alpha');
-            // dsds.io.audio.audio_out_master.connectTo(dup.io.audio.input);
-            // dup.io.audio.output_1.connectTo(amp.io.audio.input_R);
-            // dup.io.audio.output_2.connectTo(amp.io.audio.input_L);
-            // pulse.io.signal.output.connectTo(mrd.io.signal.pulseIn);
-            // pulse.i.tempo(380);
-        
-            // mrd.i.pageData(0,0,
-            //     [true, false, false, false, false, false, false, false, false, false, true, false, false, false, false, false]
-            // );
-            // mrd.i.pageData(1,0,
-            //     [false, false, false, false, true, false, false, false, false, false, false, false, true, false, false, false]
-            // );
-            // mrd.i.pageData(2,0,
-            //     [false, false, false, false, false, false, true, false, false, false, false, false, false, false, false, true]
-            // );
-            // mrd.i.pageData(6,0,
-            //     [false, false, true, false, false, false, true, false, false, false, true, true, false, false, true, false]
-            // );
+            // const bc = _canvas_.control.scene.addUnit(10,10,0,'bitcrusher','acousticresearch');
+            // const am = _canvas_.control.scene.addUnit(10,10,0,'amplitude_modifier','acousticresearch');
+            // const sa = _canvas_.control.scene.addUnit(10,10,0,'sigmoids_affecter','acousticresearch');
+            // const lp = _canvas_.control.scene.addUnit(10,10,0,'lag_processor','acousticresearch');
+            // const g = _canvas_.control.scene.addUnit(10,10,0,'gain','acousticresearch');
+            // const sag = _canvas_.control.scene.addUnit(10,10,0,'stable_amplitude_generator','acousticresearch');
+            // const sa2 = _canvas_.control.scene.addUnit(10,10,0,'stream_adder','acousticresearch');
+            // const fg = _canvas_.control.scene.addUnit(10,10,0,'frequency_generator','acousticresearch');
+            // const mam = _canvas_.control.scene.addUnit(10,10,0,'momentary_amplitude_meter','acousticresearch');
+            const farw = _canvas_.control.scene.addUnit(10,10,0,'frequency_amplitude_response_workstation','acousticresearch');
+            // const fg = _canvas_.control.scene.addUnit(10,10,0,'data_controlled_frequency_generator','acousticresearch');
             
             
         
         
         
             _canvas_.control.viewport.scale(4);
-            _canvas_.control.viewport.position(-10,70);
+            // _canvas_.control.viewport.position(-5, -650);
         });
-        // {{include:4.js}} //acoustic research units
     }
 }

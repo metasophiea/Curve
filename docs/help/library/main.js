@@ -72,11 +72,25 @@ const root_directory = '/help/library/';
 //resizing
     window.onresize = function(){
         const mux = Math.trunc( window.innerWidth / (document_size + document_padding) );
+
         groups.forEach(group => {
             const sections = group.getElementsByClassName('unit_document_section');
+            let biggest_height = 0;
+            for(var a = 0; a < sections.length; a++){
+                sections[a].style.height = '';
+
+                let margin = parseFloat( window.getComputedStyle(sections[a], null).getPropertyValue('font-size') ) / 2;
+                if((sections[a].offsetHeight + margin) > biggest_height){
+                    biggest_height = sections[a].offsetHeight + margin;
+                }
+            }
+
             for(var a = 0; a < sections.length; a++){
                 sections[a].style.width = (1/mux)*100 + '%';
+                sections[a].style.height = biggest_height + 'px';
             }
+
         });
     };
     setTimeout(window.onresize,1);
+    setTimeout(window.onresize,1000);

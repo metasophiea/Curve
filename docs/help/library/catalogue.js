@@ -51,7 +51,7 @@ library = [
         print_name: 'Acoustic Research',
         description: [
             'Founded in the late 1950\'s, Acoustic Research was known for producing some of the finest audio experimentation equipment on the market. Their products centre mainly around audio effect units, though they also produced a number of audio signal generators.',
-            'Their long-serving founder James Chaffinch was a legend in his field, producing many of the original product line, including Sigmoid\'s Affecter and the F/AR Workstation. In later years he become more interested in fashion and started his own line of men and women\'s business wear. You may have heard of the "Chaffinch Double-Knot Shirt Belt", which can still be seen in many offices across the world today.'
+            'Their long-serving founder James Chaffinch was a legend in his field, producing many of the original product line, including Sigmoid\'s Affecter and the F/AR Workstation. In later years he became more interested in fashion and started his own line of men and women\'s business wear. You may have heard of the "Chaffinch Double-Knot Shirt Belt", which can still be seen in many offices across the world today.'
         ],
         documents: [
             {
@@ -74,6 +74,22 @@ library = [
                 print_name: 'Frequency Amplitude Response Workstation',
                 document_aspect_ratio: 1.41,
             },
+            {
+                name: 'frequency_generator',
+                print_name: 'Frequency Generator',
+                document_aspect_ratio: 1.41,
+            },
+            {
+                name: 'gain',
+                print_name: 'Gain',
+                document_aspect_ratio: 1.41,
+            },
+            {
+                name: 'lag_processor',
+                print_name: 'Lag Processor',
+                document_aspect_ratio: 1.41,
+            },
+
             {
                 name: 'sigmoids_affecter',
                 print_name: 'Sigmoid\'s Affecter',

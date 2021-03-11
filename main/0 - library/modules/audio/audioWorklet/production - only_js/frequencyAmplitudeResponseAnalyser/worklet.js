@@ -263,8 +263,9 @@ class frequencyAmplitudeResponseAnalyser extends AudioWorkletProcessor{
 
         //collector
             const input = inputs[0];
-            this._stepData.push(...input[0]);
-            
+            if( inputs[0].length != 0){
+                this._stepData.push(...input[0]);
+            }
 
 
         if( currentTime - this._lastUpdate > this._state.frequency.timePerStep ){

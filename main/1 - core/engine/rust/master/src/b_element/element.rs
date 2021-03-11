@@ -449,7 +449,7 @@ pub trait ElementTrait {
                 //draw bounding box top left and bottom right points
                     ElementManager::draw_dot(
                         &self.get_extremities().get_bounding_box().get_top_left(), 6.0 * mux, &Colour::new(0.0,1.0,1.0,0.5), 
-                        parent_clipping_polygon, heed_camera,viewbox, context, web_gl2_program_conglomerate_manager, image_requester, resolution, stats
+                        parent_clipping_polygon, heed_camera, viewbox, context, web_gl2_program_conglomerate_manager, image_requester, resolution, stats
                     );
                     ElementManager::draw_dot(
                         &self.get_extremities().get_bounding_box().get_bottom_right(), 6.0 * mux, &Colour::new(0.0,1.0,1.0,0.5), 

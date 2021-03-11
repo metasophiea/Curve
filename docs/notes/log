@@ -1,4 +1,17 @@
 ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2021-03-10
+  - updated help/library layout code.. which is only a little better and needs
+    more work
+
+
+2021-03-08
+  - more work on documents
+  - added check to frequencyAmplitudeResponseAnalyser worklet, which checks to
+    see if there's any input before attempting to add that output to the
+    internal step data. This used to cause the F/AR Workstation to become
+    inoperable if you pressed the start button when nothing was plugged in
+
+
 2021-03-04
   - more work on documents
 
