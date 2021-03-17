@@ -36,16 +36,22 @@ const root_directory = '/help/library/';
 
 
         //add units
-            const group_units_section = document.createElement('section');
-            group_units_section.id = 'group_units_section';
-            group_section.append(group_units_section);
+            const units_section = document.createElement('section');
+            units_section.id = 'units_section';
+            units_section.style.display = 'grid';
+            group_section.append(units_section);
+
+            group.html = {};
+            group.html.section = units_section;
+            group.html.units = [];
 
             group.documents.forEach(unit => {
                 //create unit section
                     const group_unit_section = document.createElement('section');
                     group_unit_section.id = group.name+'_'+unit.name+'_unit_section';
                     group_unit_section.classList.add('unit_document_section');
-                    group_units_section.append(group_unit_section);
+                    // units_section.append(group_unit_section);
+                    group.html.units.push( group_unit_section );
 
                 //add document image link
                     const link = document.createElement('a');
@@ -70,27 +76,29 @@ const root_directory = '/help/library/';
     });
 
 //resizing
+    let previous_mux = 0;
     window.onresize = function(){
         const mux = Math.trunc( window.innerWidth / (document_size + document_padding) );
 
-        groups.forEach(group => {
-            const sections = group.getElementsByClassName('unit_document_section');
-            let biggest_height = 0;
-            for(var a = 0; a < sections.length; a++){
-                sections[a].style.height = '';
+        if(mux != previous_mux) {
+            library.forEach(group => {
+                group.html.section.innerHTML = '';
 
-                let margin = parseFloat( window.getComputedStyle(sections[a], null).getPropertyValue('font-size') ) / 2;
-                if((sections[a].offsetHeight + margin) > biggest_height){
-                    biggest_height = sections[a].offsetHeight + margin;
+                group.html.units.forEach(unit => {
+                    unit.style.width = (1/mux)*100 + '%';
+                });
+
+                for(let a = 0; a < group.html.units.length; a+=mux){
+                    const units_sub_section = document.createElement('section');
+                    units_sub_section.id = 'units_sub_section';
+                    group.html.section.append(units_sub_section);
+
+                    for(let index = 0; index < mux; index++){
+                        if(group.html.units[a+index] != undefined){ units_sub_section.append(group.html.units[a+index]); }
+                    }
                 }
-            }
+            });
+        }
 
-            for(var a = 0; a < sections.length; a++){
-                sections[a].style.width = (1/mux)*100 + '%';
-                sections[a].style.height = biggest_height + 'px';
-            }
-
-        });
     };
     setTimeout(window.onresize,1);
-    setTimeout(window.onresize,1000);

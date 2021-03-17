@@ -243,4 +243,6 @@ _canvas_.layers.registerFunctionForLayer("core", function(){
     // _canvas_.core.viewport.angle(0.5);
 
     setTimeout(()=>{ _canvas_.core.render.frame(); },500);
+
+    // _canvas_.core.callback.callbackActivationMode("TopMostOnly");
 } );    
