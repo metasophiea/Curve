@@ -1,7 +1,12 @@
 ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2021-03-18
+  - more work on documents (added the momentary_amplitude_meter and
+    stable_amplitude_generator)
+
+
 2021-03-14
   - updated help/library layout code again. It's much better now, though really
-  the page could use a small redesign
+    the page could use a small redesign
 
 
 2021-03-12

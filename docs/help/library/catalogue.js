@@ -89,10 +89,19 @@ library = [
                 print_name: 'Lag Processor',
                 document_aspect_ratio: 1.41,
             },
-
+            {
+                name: 'momentary_amplitude_meter',
+                print_name: 'Momentary Amplitude Meter',
+                document_aspect_ratio: 1.41,
+            },
             {
                 name: 'sigmoids_affecter',
                 print_name: 'Sigmoid\'s Affecter',
+                document_aspect_ratio: 1.41,
+            },
+            {
+                name: 'stable_amplitude_generator',
+                print_name: 'Stable Amplitude Generator',
                 document_aspect_ratio: 1.41,
             },
         ],
