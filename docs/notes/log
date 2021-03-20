@@ -1,4 +1,12 @@
 ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2021-03-20
+  - made the last of the documents
+  - re-rendered the covers into smaller png files, so that the library site
+    loads faster. The site now also recognises pixel densities, so there are
+    three covers available; full original resolution, 250px horizontal and
+    double 250px horizontal (so 500px)
+
+
 2021-03-18
   - more work on documents (added the momentary_amplitude_meter and
     stable_amplitude_generator)

@@ -58,7 +58,13 @@ const root_directory = '/help/library/';
                     link.href = root_directory + group.name + '/' + unit.name + '/document.pdf';
                 
                     const image = document.createElement('img');
-                    image.src = root_directory + group.name + '/' + unit.name + '/cover.png';
+                    if(window.devicePixelRatio <= 1){
+                        image.src = root_directory + group.name + '/' + unit.name + '/cover_250.png';
+                    } else if(window.devicePixelRatio <= 2){
+                        image.src = root_directory + group.name + '/' + unit.name + '/cover_250@2.png';
+                    } else {
+                        image.src = root_directory + group.name + '/' + unit.name + '/cover.png';
+                    }
                     image.classList.add('unit_document_cover_image');
                     image.width = document_size;
                     image.height = document_size * unit.document_aspect_ratio;

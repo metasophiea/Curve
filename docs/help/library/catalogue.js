@@ -104,6 +104,11 @@ library = [
                 print_name: 'Stable Amplitude Generator',
                 document_aspect_ratio: 1.41,
             },
+            {
+                name: 'stream_adder',
+                print_name: 'Stream Adder',
+                document_aspect_ratio: 1.41,
+            },
         ],
     },
 
