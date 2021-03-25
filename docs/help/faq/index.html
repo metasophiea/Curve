@@ -29,7 +29,7 @@
                 border: none;
                 text-align: left;
                 outline: none;
-                font-size: 15px;
+                /* font-size: 15px; */
                 transition: 0.4s;
             }
             .active, .accordion:hover {
@@ -68,14 +68,27 @@
         <h1>FAQ</h1>
 
         <div id="main_section">
+
             <button class="accordion">The mouse wheel zoom isn't working correctly</button>
             <div class="panel">
                 <p>Depending on what type of mouse you have, you'll need to change the "Mouse Wheel Mode" which can be found under "tools > Mouse Wheel Mode"</p>
             </div>
+
             <button class="accordion">I sometimes can't connect together audio ports, why not?</button>
             <div class="panel">
                 <p>Perhaps you're attempting to connect an input to and input, or an output to an output? These connections are not allowed</p>
             </div>
+
+            <button class="accordion">How come after a little while the site just crashes?</button>
+            <div class="panel">
+                <p>I know. I've done all I can to fix it but it seems its a bug with Chrome that I just can't get around. I've registered the bug with them here, maybe you can encourage them to look into it <a href="https://bugs.chromium.org/p/chromium/issues/detail?id=1149413">https://bugs.chromium.org/p/chromium/issues/detail?id=1149413</a> My best advice right now is to avoid any unit that comes with a frame-rate adjust. The bug is centred around transferring images around, so, reducing the number of times that happens can really help.</p>
+            </div>
+
+            <button class="accordion">There's something odd about the graphics; things seems to be squashed to the left</button>
+            <div class="panel">
+                <p>Are you on Windows 10? I've seen this before, and I am sure I've fixed it; but if you're reading this I guess I haven't. You can fix it by adjusting the scaling in the control panel of windows. I'm still trying to fix it though</p>
+            </div>
+
         </div>
         
         <script>

@@ -1,4 +1,12 @@
 ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2021-03-22
+  - modified the /help/getting_started site so that videos are only loaded when
+    their frame comes into view. Instead of the page loading all of them at the
+    same time in a random order
+  - added more items the faq, and changed the graphics a little of the whole
+    site to work better on different screens.. not perfect but certainly better
+
+
 2021-03-20
   - made the last of the documents
   - re-rendered the covers into smaller png files, so that the library site

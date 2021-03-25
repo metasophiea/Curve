@@ -11,11 +11,7 @@
                 margin:1%;
                 font-family: Roboto;
             }
-            h1{
-                font-size: xxx-large;
-            }
             h2{
-                font-size: xx-large;
                 margin: 10px;
             }
             h3{
@@ -29,7 +25,6 @@
                 z-index: 1;
                 background-color: #f5f5f5;
                 margin-left: 2%;
-                margin-top: 10px;
                 overflow-x: hidden;
             }
             .sidenav a {
@@ -47,8 +42,9 @@
                 position: absolute;
             }
             .sidenav_sticky {
+                /* margin-top: 10px; */
                 position: fixed;
-                top: 10px;
+                top: 20px;
             }
             
             #videos{
@@ -59,10 +55,13 @@
                 margin-bottom: 10px;
 
                 background-color: #f5f5f5;
-                display: inline-block;
                 padding: 10px;
 
                 max-width: 520px;
+                display: block;
+                margin-left: auto;
+                margin-right: auto;
+
             }
             .video_section_p{
                 width: 500px
@@ -127,23 +126,44 @@
                     navbar.classList.remove("sidenav_sticky");
                     navbar.classList.add("sidenav_not_sticky")
                 }
+
+                videoLoader();
             };
+
+            function videoLoader(){
+                //check all videos. If one is in frame - and it not already loaded - add the source element
+                let videos = document.getElementsByTagName("video");
+                for(let a = 0; a < videos.length; a++){
+                    if(
+                        videos[a].getBoundingClientRect().y < window.innerHeight && 
+                        videos[a].getBoundingClientRect().y > 0 &&
+                        videos[a].children.length == 0
+                    ){
+                        let source = document.createElement('source');
+                        source.src = "videos/"+ videos[a].id +".mov";
+                        source.type = "video/mp4";
+                        videos[a].appendChild(source);
+                    }
+                }
+            }
+
+            setTimeout(videoLoader,1);
         </script>
 
         <div id="videos">
             <div id="Project" class="video_section">
                 <h2>Project</h2>
                 <p class="video_section_p">Use this option to clear the project</p>
-                <video width="500" height="500" autoplay loop>
-                    <source src="videos/new_file.mov" type="video/mp4">
+                <video id="new_file" width="500" height="500" autoplay loop>
+                    <!-- <source src="videos/new_file.mov" type="video/mp4"> -->
                 </video>
                 <p class="video_section_p">Use the open option to open a curve project file</p>
-                <video width="500" height="500" autoplay loop>
-                    <source src="videos/open_file.mov" type="video/mp4">
+                <video id="open_file" width="500" height="500" autoplay loop>
+                    <!-- <source src="videos/open_file.mov" type="video/mp4"> -->
                 </video>
                 <p class="video_section_p">Save your project using the save option. Project files will appear as a download</p>
-                <video width="500" height="500" autoplay loop>
-                    <source src="videos/save_file.mov" type="video/mp4">
+                <video id="save_file" width="500" height="500" autoplay loop>
+                    <!-- <source src="videos/save_file.mov" type="video/mp4"> -->
                 </video>
             </div>
 
@@ -153,19 +173,19 @@
                 <h2>Moving The Viewport</h2>
                 <h3>Panning</h3>
                 <p class="video_section_p">Click-and-drag the background to move the viewport</p>
-                <video width="500" height="500" autoplay loop>
-                    <source src="videos/viewport_panning.mov" type="video/mp4">
+                <video id="viewport_panning" width="500" height="500" autoplay loop>
+                    <!-- <source src="videos/viewport_panning.mov" type="video/mp4"> -->
                 </video>
                 <h3>Zoom</h3>
                 <p class="video_section_p">Use your mouse wheel to zoom in and out</p>
-                <video width="500" height="500" autoplay loop>
-                    <source src="videos/viewport_zoom.mov" type="video/mp4">
+                <video id="viewport_zoom" width="500" height="500" autoplay loop>
+                    <!-- <source src="videos/viewport_zoom.mov" type="video/mp4"> -->
                 </video>
                 <p class="video_section_p">Depending on what type of mouse you have, you'll need to change the "Mouse Wheel Mode" which can be found under "tools > Mouse Wheel Mode"</p>
                 <h3>Reset</h3>
                 <p class="video_section_p">If you ever get a bit lost with the viewport, press the reset button to bring you back to zero</p>
-                <video width="500" height="500" autoplay loop>
-                    <source src="videos/viewport_reset.mov" type="video/mp4">
+                <video id="viewport_reset" width="500" height="500" autoplay loop>
+                    <!-- <source src="videos/viewport_reset.mov" type="video/mp4"> -->
                 </video>
             </div>
 
@@ -174,8 +194,8 @@
             <div id="CreatingAUnit" class="video_section">
                 <h2>Creating A Unit</h2>
                 <p class="video_section_p">Use the create menu to create a new unit</p>
-                <video width="500" height="500" autoplay loop>
-                    <source src="videos/creating_a_unit.mov" type="video/mp4">
+                <video id="creating_a_unit" width="500" height="500" autoplay loop>
+                    <!-- <source src="videos/creating_a_unit.mov" type="video/mp4"> -->
                 </video>
             </div>
 
@@ -185,18 +205,18 @@
                 <h2>Selecting A Unit</h2>
                 <h3>Individual Select</h3>
                 <p class="video_section_p">Select a unit by clicking on a part of its body, avoiding any interface items (buttons and dials, etc)</p>
-                <video width="500" height="500" autoplay loop>
-                    <source src="videos/individual_select.mov" type="video/mp4">
+                <video id="individual_select" width="500" height="500" autoplay loop>
+                    <!-- <source src="videos/individual_select.mov" type="video/mp4"> -->
                 </video>
                 <h3>Group Select</h3>
                 <p class="video_section_p">Hold 'shift' while clicking and dragging to select units in an area</p>
-                <video width="500" height="500" autoplay loop>
-                    <source src="videos/group_select.mov" type="video/mp4">
+                <video id="group_select" width="500" height="500" autoplay loop>
+                    <!-- <source src="videos/group_select.mov" type="video/mp4"> -->
                 </video>
                 <h3>Choosing</h3>
                 <p class="video_section_p">Hold 'shift' while clicking on different units to select and deselect</p>
-                <video width="500" height="500" autoplay loop>
-                    <source src="videos/choosing.mov" type="video/mp4">
+                <video id="choosing" width="500" height="500" autoplay loop>
+                    <!-- <source src="videos/choosing.mov" type="video/mp4"> -->
                 </video>
             </div>
 
@@ -206,18 +226,18 @@
                 <h2>Moving A Unit</h2>
                 <h3>Panning</h3>
                 <p class="video_section_p">Simply click-and-drag units around the page</p>
-                <video width="500" height="500" autoplay loop>
-                    <source src="videos/unit_moving.mov" type="video/mp4">
+                <video id="unit_moving" width="500" height="500" autoplay loop>
+                    <!-- <source src="videos/unit_moving.mov" type="video/mp4"> -->
                 </video>
                 <h3>Rotation</h3>
                 <p class="video_section_p">Holding 'shift' and 'alt', click-and-drag units to rotate them</p>
-                <video width="500" height="500" autoplay loop>
-                    <source src="videos/unit_rotation.mov" type="video/mp4">
+                <video id="unit_rotation" width="500" height="500" autoplay loop>
+                    <!-- <source src="videos/unit_rotation.mov" type="video/mp4"> -->
                 </video>
                 <h3>Snapping</h3>
                 <p class="video_section_p">This will make units pan and rotate in blocky increments</p>
-                <video width="500" height="500" autoplay loop>
-                    <source src="videos/unit_movement_snapping.mov" type="video/mp4">
+                <video id="unit_movement_snapping" width="500" height="500" autoplay loop>
+                    <!-- <source src="videos/unit_movement_snapping.mov" type="video/mp4"> -->
                 </video>
             </div>
 
@@ -226,32 +246,32 @@
             <div id="UnitManagement" class="video_section">
                 <h2>Unit Management</h2>
                 <h3>Cut</h3>
-                <video width="500" height="500" autoplay loop>
-                    <source src="videos/unit_cut.mov" type="video/mp4">
+                <video id="unit_cut" width="500" height="500" autoplay loop>
+                    <!-- <source src="videos/unit_cut.mov" type="video/mp4"> -->
                 </video>
                 <h3>Copy</h3>
-                <video width="500" height="500" autoplay loop>
-                    <source src="videos/unit_copy.mov" type="video/mp4">
+                <video id="unit_copy" width="500" height="500" autoplay loop>
+                    <!-- <source src="videos/unit_copy.mov" type="video/mp4"> -->
                 </video>
                 <h3>Paste</h3>
-                <video width="500" height="500" autoplay loop>
-                    <source src="videos/unit_paste.mov" type="video/mp4">
+                <video id="unit_paste" width="500" height="500" autoplay loop>
+                    <!-- <source src="videos/unit_paste.mov" type="video/mp4"> -->
                 </video>
                 <h3>Duplicate</h3>
-                <video width="500" height="500" autoplay loop>
-                    <source src="videos/unit_duplicate.mov" type="video/mp4">
+                <video id="unit_duplicate" width="500" height="500" autoplay loop>
+                    <!-- <source src="videos/unit_duplicate.mov" type="video/mp4"> -->
                 </video>
                 <p class="video_section_p">You can also hold the 'alt' button then click-and-drag a unit to duplicate</p>
-                <video width="500" height="500" autoplay loop>
-                    <source src="videos/unit_alt-duplicate.mov" type="video/mp4">
+                <video id="unit_alt-duplicate" width="500" height="500" autoplay loop>
+                    <!-- <source src="videos/unit_alt-duplicate.mov" type="video/mp4"> -->
                 </video>
                 <p class="video_section_p">You can also cut/copy/paste/duplicate groups of units, which will maintain their connections</p>
-                <video width="500" height="500" autoplay loop>
-                    <source src="videos/unit_group_paste.mov" type="video/mp4">
+                <video id="unit_group_paste" width="500" height="500" autoplay loop>
+                    <!-- <source src="videos/unit_group_paste.mov" type="video/mp4"> -->
                 </video>
                 <h3>Delete</h3>
-                <video width="500" height="500" autoplay loop>
-                    <source src="videos/unit_delete.mov" type="video/mp4">
+                <video id="unit_delete" width="500" height="500" autoplay loop>
+                    <!-- <source src="videos/unit_delete.mov" type="video/mp4"> -->
                 </video>
             </div>
 
@@ -260,22 +280,22 @@
             <div id="Connecting" class="video_section">
                 <h2>Connecting</h2>
                 <p class="video_section_p">Click-and-drag on a connector port to start a connection, then drag it to another port to connect</p>
-                <video width="500" height="500" autoplay loop>
-                    <source src="videos/connecting.mov" type="video/mp4">
+                <video id="connecting" width="500" height="500" autoplay loop>
+                    <!-- <source src="videos/connecting.mov" type="video/mp4"> -->
                 </video>
                 <p class="video_section_p">You don't have to disconnect a cable, before trying to connect it elsewhere</p>
-                <video width="500" height="500" autoplay loop>
-                    <source src="videos/swapping_2.mov" type="video/mp4">
+                <video id="swapping_2" width="500" height="500" autoplay loop>
+                    <!-- <source src="videos/swapping_2.mov" type="video/mp4"> -->
                 </video>
                 <h3>Disconnecting</h3>
                 <p class="video_section_p">Double-click the connector port to disconnect</p>
-                <video width="500" height="500" autoplay loop>
-                    <source src="videos/disconnecting.mov" type="video/mp4">
+                <video id="disconnecting" width="500" height="500" autoplay loop>
+                    <!-- <source src="videos/disconnecting.mov" type="video/mp4"> -->
                 </video>
                 <h3>Swapping</h3>
                 <p class="video_section_p">You can have a cable replace a connection - and so long as you don't stop the click - pulling the cable away will reconnect the other cable</p>
-                <video width="500" height="500" autoplay loop>
-                    <source src="videos/swapping_1.mov" type="video/mp4">
+                <video id="swapping_1" width="500" height="500" autoplay loop>
+                    <!-- <source src="videos/swapping_1.mov" type="video/mp4"> -->
                 </video>
             </div>
 
@@ -288,13 +308,13 @@
                     <p>Green - Voltage</p>
                     <p>Orange - Audio</p>
                     <p>Blue - Data</p>
-                    <video width="500" height="500" autoplay loop>
-                        <source src="videos/connection_types.mov" type="video/mp4">
+                    <video id="connection_types" width="500" height="500" autoplay loop>
+                        <!-- <source src="videos/connection_types.mov" type="video/mp4"> -->
                     </video>
                     <p>These are referred to as "CUIS", or the "Coordinated Universal Interworking Standard", which you can read more about in the <a class="in_text_link" href="/help/library">Library</a></p>
                     <p>Note: Audio connections have a direction, and as such you cannot connect together ports that are both inputs or are both outputs</p>             
-                    <video width="500" height="500" autoplay loop>
-                        <source src="videos/connections_not_working.mov" type="video/mp4">
+                    <video id="connections_not_working" width="500" height="500" autoplay loop>
+                        <!-- <source src="videos/connections_not_working.mov" type="video/mp4"> -->
                     </video>
             </div>
 

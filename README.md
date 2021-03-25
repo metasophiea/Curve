@@ -2,8 +2,9 @@
     <a href="https://curve.metasophiea.com/"><img width="100%" src="https://raw.githubusercontent.com/metasophiea/Curve/master/docs/images/logo/curve.png"></a>
 </p>
 
-## Demonstration Video
+## Demonstration Videos
 [https://youtu.be/vtJ5edNoNGA](https://youtu.be/vtJ5edNoNGA)
+[https://youtu.be/wWYRuVK3dro](https://youtu.be/wWYRuVK3dro)
 
 
 ## A Project In Multiple Parts
@@ -57,3 +58,5 @@ Rewriting the rendering engine in WebAssembly went pretty well - only took 6 mon
 - [Curve Demo 4](https://curve.metasophiea.com?demo=4)
 - [Curve Demo 5](https://curve.metasophiea.com?demo=5)
 - [Curve Demo 6](https://curve.metasophiea.com?demo=6)
+
+## [***Curve Next***](https://curve.metasophiea.com/next/)
