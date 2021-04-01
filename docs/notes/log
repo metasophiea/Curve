@@ -1,4 +1,10 @@
 ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2021-04-01
+  - updates to the explainPage to add links to the help and github pages
+  - updated the FAQ page to include a section about the site not working on
+    some browsers (I should really test Edge and Opera)
+
+
 2021-03-22
   - modified the /help/getting_started site so that videos are only loaded when
     their frame comes into view. Instead of the page loading all of them at the

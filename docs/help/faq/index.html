@@ -29,7 +29,7 @@
                 border: none;
                 text-align: left;
                 outline: none;
-                /* font-size: 15px; */
+                font-size: 15px;
                 transition: 0.4s;
             }
             .active, .accordion:hover {
@@ -79,9 +79,16 @@
                 <p>Perhaps you're attempting to connect an input to and input, or an output to an output? These connections are not allowed</p>
             </div>
 
+            <button class="accordion">Why doesn't the site work on my browser?</button>
+            <div class="panel">
+                <p>Tell me about it. From what I understand, only Chrome is able to run the site's code correctly. The site uses a number of admittedly fancy aspects of JavaScript - mainly "offscreen canvas" which allows the system's rendering engine to do its work on a separate process thread.</p>
+                <p>Though these features have been in the standard for a number of years now, it seems that Firefox and Safari do not have them implemented. I believe Edge and Opera do, but I haven't tested them yet.</p>
+            </div>
+
             <button class="accordion">How come after a little while the site just crashes?</button>
             <div class="panel">
-                <p>I know. I've done all I can to fix it but it seems its a bug with Chrome that I just can't get around. I've registered the bug with them here, maybe you can encourage them to look into it <a href="https://bugs.chromium.org/p/chromium/issues/detail?id=1149413">https://bugs.chromium.org/p/chromium/issues/detail?id=1149413</a> My best advice right now is to avoid any unit that comes with a frame-rate adjust. The bug is centred around transferring images around, so, reducing the number of times that happens can really help.</p>
+                <p>I know. I've done all I can to fix it but it seems its a bug with Chrome that I just can't get around. I've registered the bug with them here, maybe you can encourage them to look into it <a href="https://bugs.chromium.org/p/chromium/issues/detail?id=1149413">https://bugs.chromium.org/p/chromium/issues/detail?id=1149413</a></p>
+                <p>My best advice right now is to avoid any unit that comes with a frame-rate adjust. The bug is centred around transferring images around, so, reducing the number of times that happens can really help.</p>
             </div>
 
             <button class="accordion">There's something odd about the graphics; things seems to be squashed to the left</button>
