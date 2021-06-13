@@ -1,4 +1,8 @@
 ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2021-06-02
+  - moved integrated_synthesizer_type_1 from workshop into production
+
+
 2021-04-01
   - updates to the explainPage to add links to the help and github pages
   - updated the FAQ page to include a section about the site not working on
@@ -242,7 +246,7 @@
 
 
 2020-11-26
-  - created a new unit for Accoustic Research; the Data Controlled Frequency
+  - created a new unit for Acoustic Research; the Data Controlled Frequency
     Generator, which is exactly the same as the Frequency Generator, but the
     frequency is controlled by a data input. It uses the
     integrated_synthesizer_type_1 audio node directly, so, I'll need to create

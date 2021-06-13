@@ -35,17 +35,43 @@
         <h1 style='font-style: italic;'>Next</h1>
 
         <p>After discovering the bug that made the site essentially unusable for any real purpose, I found myself in a depressing place. I wanted to continue working on this project that has brought me so much joy and passion, so I have decided to use the Rust programming language that I learned to make the core-engine webASM rewrite, and use it to produce a stand-alone desktop app for Mac, Linux and Windows.</p>
-        <p>So far its been a little of an uphill battle, and I don't expect it to have similar functionality to the website version for some time - I have yet to even look at how I'm going to do audio. I hope however that by the end of this year (2021) I will have a large chunk of the program together. Alongside, I will also be working on the website. Partly so that if the bug is ever fixed, I don't feel like I've left it to languish for all this time. Partly so I don't feel like I'm eternally in this loop of restarting.</p>
-        <p>I am using WGPU for the graphical back-end. Luckily I had most of a rendering engine already written in Rust as I had been rewriting most of the website version's rendering engine to use webASM, so I was able to copy over a lot of that code into this project and currently have a version of the engine working nicely. At the moment it can only render rectangles, but I have tested it on my desktop as being able to render around 2,000,000 rectangles in a second. Much faster than the top-speed I could get from the website version, which was about 720,000. Also thanks to the fact I could copy a lot of it over, the engine already has a moveable viewport, element render judgements, frame skipping, stencilling, a tree-based element data structure, extremity calculation, and more. Plus all the mouse/keyboard interaction code that I had been working on most recently. And one or two small editions along the way that I forgot to add in the website version, for example, multi-level stencilling. Much has had to change thanks to the switch from webGL to WGPU which has added a whole new host of issues, but I'm confident that it's shaping up to be a faster and more stable version of the engine. I hope in future to re-write certain parts to expand functionality, though currently I am trying only to match what the original can do.</p>
-        <p>I'm going to keep the code secret for now, but below you can find completed applications that I've put together as I develop the larger project.</p>
+        <p>Here, you can find a mini-blog on the development of that project.</p>
+        <p>I don't know how to do signing yet, so, your anti-virus is not going to be super happy about any of this.</p>
 
         <div id="cards">
+
+            <div class="card">
+                <h2>Element Test - Plus Automatic Image Update</h2>
+                <p>2021-06-09 - Made with draft 16 of the project, as a way of testing all the elements that the engine can render. This collection will of course change in future - as the character and string elements are added - but with the addition of the image element and its auto-update feature, I wanted to share how it is right now.</p>
+                <p>In this demo you can see that we've expanded from just being able to render a rectangle (and the group). Now available are:</p>
+                <ul>
+                    <li>Rectangle With Outline</li>
+                    <li>Circle</li>
+                    <li>Circle With Outline</li>
+                    <li>Polygon</li>
+                    <li>Polygon With Outline</li>
+                    <li>Path</li>
+                    <li>Image</li>
+                </ul>
+                <img style="width: 100%;" src="/next/images/element_test_1.png"></img>
+                <p>You'll notice that this demo also comes with an "images" folder, which contains the file used in the Image element: "colour_squares.jpg". You can modify this file how you like and the system will render it. Whats more; you don't have to restart the program for those updates to take effect. The engine is constantly checking that file every second for changes, so once you press save in your editor - the engine will reload and re-render the image automatically.</p>
+                <h3>Downloads</h3>
+                <p><a href="/next/apps/element_test_1/macos/10.11/element_test_1.zip">MacOS 10.11</a></p>
+                <p><a href="/next/apps/element_test_1/windows10/element_test_1.zip">Windows 10</a></p>
+            </div>
+
+            <div class="card">
+                <h2>Chrome Update - 09/06/2021</h2>
+                <p>Recently I've noticed that it appears some changes have been made to Chrome that stop the crash from occurring. Unfortunately, these changes haven't entirely solved the issue as now instead of crashing Chrome instead seems to enter enormous difficulty with a heavily reduced frame-rate - which isn't super promising.</p>
+                <p>There's also been no comment on the bug report page <a href="https://bugs.chromium.org/p/chromium/issues/detail?id=1149413">https://bugs.chromium.org/p/chromium/issues/detail?id=1149413</a></p>
+            </div>
+
             <div class="card">
                 <h2>Callback Interaction</h2>
                 <p>2021-03-15 - Made with draft 15 of the project, as a way of testing the callback section of the rendering engine. </p>
                 <p>This section handles mouse and keyboard interaction, mapping those actions against the elements arranged on screen, allowing the actions to relate to those elements. In turn, elements can activate certain callbacks ("onmousedown" or "onkeydown" for example). When an action occurs that coincides with an element who has activated a callback that matches this action; an event is made which the outer system can collect and work with.</p>
                 <p>Mousing over the rectangles on screen will cause them to glow. The square at the top right of the screen will react to mouse wheel motion, both in the x and y directions. Double-clicking this square will change the "activation mode", which determines how the system deals with elements that are layered on top of one another</p>
-                <img style="width: 100%;" src="/next/images/callback_interaction.png"></img>
+                <img style="width: 100%;" src="/next/images/callback_interaction.jpg"></img>
                 <h3>Downloads</h3>
                 <p><a href="/next/apps/callback_interaction/macos/10.11/callback_interaction.zip">MacOS 10.11</a></p>
                 <p><a href="/next/apps/callback_interaction/windows10/callback_interaction.zip">Windows 10</a></p>
@@ -57,7 +83,6 @@
                 <p>2021-02-19 - Made with draft 12 of the project, as a way of testing the inter-process rendering communication, along with the system's ability to perform long-term state-based game-like actions (instead of just rendering a single frame). The wave patterns are calculated on the spot, as are the randomly selected colours.</p>
                 <img style="width: 100%;" src="/next/images/wavey_boxes.png"></img>
                 <h3>Downloads</h3>
-                <p>I don't know how to do signing yet, so, your anti-virus is not going to be super happy about this.</p>
                 <p><a href="/next/apps/wavey_boxes/macos/10.11/wavey_boxes.zip">MacOS 10.11</a></p>
                 <p><a href="/next/apps/wavey_boxes/windows10/wavey_boxes.zip">Windows 10</a></p>
             </div>
@@ -65,11 +90,19 @@
             <div class="card">
                 <h2>Rectangle Count Test</h2>
                 <p>Based on draft 8 of the project, these are applications used to test just how many rectangles the engine can produce and render. I recommend building up from the smallest value, and probably not running the 10m one at all.</p>
-                <img style="width: 100%;" src="/next/images/render_rectangle_count_test.png"></img>
+                <img style="width: 100%;" src="/next/images/render_rectangle_count_test.jpg"></img>
                 <h3>Downloads</h3>
                 <p><a href="/next/apps/render_rectangle_count_test/macos/11.2.zip">MacOS 11.2</a></p>
                 <p><a href="/next/apps/render_rectangle_count_test/windows10/tests.zip">Windows 10</a></p>
             </div>
+
+            <div class="card">
+                <h2>Going Native</h2>
+                <p>So far its been a little of an uphill battle, and I don't expect it to have similar functionality to the website version for some time - I have yet to even look at how I'm going to do audio. I hope however that by the end of this year (2021) I will have a large chunk of the program together. Alongside, I will also be working on the website. Partly so that if the bug is ever fixed, I don't feel like I've left it to languish for all this time. Partly so I don't feel like I'm eternally in this loop of restarting.</p>
+                <p>I am using WGPU for the graphical back-end. Luckily I had most of a rendering engine already written in Rust as I had been rewriting most of the website version's rendering engine to use webASM, so I was able to copy over a lot of that code into this project and currently have a version of the engine working nicely. At the moment it can only render rectangles, but I have tested it on my desktop as being able to render around 2,000,000 rectangles in a second. Much faster than the top-speed I could get from the website version, which was about 720,000. Also thanks to the fact I could copy a lot of it over, the engine already has a moveable viewport, element render judgements, frame skipping, stencilling, a tree-based element data structure, extremity calculation, and more. Plus all the mouse/keyboard interaction code that I had been working on most recently. And one or two small editions along the way that I forgot to add in the website version, for example, multi-level stencilling. Much has had to change thanks to the switch from webGL to WGPU which has added a whole new host of issues, but I'm confident that it's shaping up to be a faster and more stable version of the engine. I hope in future to re-write certain parts to expand functionality, though currently I am trying only to match what the original can do.</p>
+                <p>I'm going to keep the code secret for now, but above you can find completed applications that I've put together as I develop the larger project.</p>
+            </div>
+
         </div>
 
     </body>

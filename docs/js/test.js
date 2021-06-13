@@ -55,7 +55,6 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
         
         
         // -- Only one test per time -- //
-        // {{include:0 - library/main.js}}
         _canvas_.layers = new function(){
             const layerRegistry = [];
         
@@ -5535,15 +5534,13 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                                         this.dutyCycleFrame.buffer.set( this._state.dutyCycle_useControl ? dutyCycleControl[0] : parameters.dutyCycle );
                                             
                                                     //process data, and copy results to channels
-                                                        for(let channel = 0; channel < output.length; channel++){
-                                                            this.wasm.exports.process(
-                                                                frequency_useFirstOnly,
-                                                                gain_useFirstOnly,
-                                                                detune_useFirstOnly,
-                                                                dutyCycle_useFirstOnly,
-                                                            );
-                                                            output[channel].set(this.outputFrame.buffer);
-                                                        }
+                                                        this.wasm.exports.process(
+                                                            frequency_useFirstOnly,
+                                                            gain_useFirstOnly,
+                                                            detune_useFirstOnly,
+                                                            dutyCycle_useFirstOnly,
+                                                        );
+                                                        output[0].set(this.outputFrame.buffer);
                                                     
                                                     return true;
                                                 }
@@ -6086,6 +6083,241 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                                 get gain(){
                                                     return this.parameters.get('gain');
                                                 }
+                                            }
+                                        ,
+                                    },
+                                    {
+                                        name:'integrated_synthesizer_type_1',
+                                        worklet:new Blob([`
+                                            const debug = function(id, ...args){ console.log(id+':', args.join(' ')); };
+                                            
+                                            class integrated_synthesizer_type_1 extends AudioWorkletProcessor {
+                                                static detuneMux = 0.1;
+                                                static detuneBounds = 1/integrated_synthesizer_type_1.detuneMux;
+                                                static availableWaveforms = ['sine', 'square', 'triangle'];
+                                            
+                                                static get parameterDescriptors(){
+                                                    return [
+                                                        {
+                                                            name: 'gain',
+                                                            defaultValue: 1,
+                                                            minValue: -1,
+                                                            maxValue: 1,
+                                                            automationRate: 'a-rate',
+                                                        },{
+                                                            name: 'detune',
+                                                            defaultValue: 0,
+                                                            minValue: -integrated_synthesizer_type_1.detuneBounds,
+                                                            maxValue: integrated_synthesizer_type_1.detuneBounds,
+                                                            automationRate: 'a-rate',
+                                                        },{
+                                                            name: 'dutyCycle',
+                                                            defaultValue: 0.5,
+                                                            minValue: 0,
+                                                            maxValue: 1,
+                                                            automationRate: 'a-rate',
+                                                        },
+                                                    ];
+                                                }
+                                            
+                                                constructor(options){
+                                                    //construct class instance
+                                                        super(options);
+                                            
+                                                    //instance state
+                                                        this.shutdown = false;
+                                                        this._state = {
+                                                            gain_useControl: false,
+                                                            detune_useControl: false,
+                                                            dutyCycle_useControl: false,
+                                            
+                                                            selected_waveform: 0,
+                                                        };
+                                            
+                                                        //setup message receiver
+                                                            const self = this;
+                                                            this.port.onmessage = function(event){
+                                                                switch(event.data.command){
+                                                                    //wasm initialization
+                                                                        case 'loadWasm':
+                                                                            WebAssembly.instantiate(
+                                                                                event.data.value,
+                                                                                { env: { Math_random: Math.random, debug_: debug, } },
+                                                                            ).then(result => {
+                                                                                //save wasm processor to instance
+                                                                                    self.wasm = result;
+                                                
+                                                                                //assemble wasm buffers
+                                                                                    self.gainFrame = { pointer: self.wasm.exports.get_gain_pointer() };
+                                                                                    self.gainFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.gainFrame.pointer, 128);
+                                                                                    self.detuneFrame = { pointer: self.wasm.exports.get_detune_pointer() };
+                                                                                    self.detuneFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.detuneFrame.pointer, 128);
+                                                                                    self.dutyCycleFrame = { pointer: self.wasm.exports.get_duty_cycle_pointer() };
+                                                                                    self.dutyCycleFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.dutyCycleFrame.pointer, 128);
+                                                                                    self.outputFrame = { pointer: self.wasm.exports.get_output_pointer() };
+                                                                                    self.outputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.outputFrame.pointer, 128);
+                                                
+                                                                                //re-send waveform selection (just incase)
+                                                                                    self.wasm.exports.select_waveform(self._state.selected_waveform);
+                                                                            });
+                                                                        break;
+                                                                    
+                                                                    //performance control
+                                                                        case 'perform':
+                                                                            self.wasm.exports.perform(event.data.value.frequency, event.data.value.velocity);
+                                                                        break;
+                                                                        case 'stopAll':
+                                                                            self.wasm.exports.stop_all();
+                                                                        break;
+                                            
+                                                                    //shutdown
+                                                                        case 'shutdown':
+                                                                            self.shutdown = true;
+                                                                        break;
+                                                
+                                                                    //use control
+                                                                        case 'gain_useControl': 
+                                                                            self._state.gain_useControl = event.data.value;
+                                                                        break;
+                                                                        case 'detune_useControl': 
+                                                                            self._state.detune_useControl = event.data.value;
+                                                                        break;
+                                                                        case 'dutyCycle_useControl': 
+                                                                            self._state.dutyCycle_useControl = event.data.value;
+                                                                        break;
+                                                
+                                                                    //waveform
+                                                                        case 'waveform':
+                                                                            self._state.selected_waveform = integrated_synthesizer_type_1.availableWaveforms.indexOf(event.data.value);
+                                                                            if(self.wasm == undefined){ return; }
+                                                                            self.wasm.exports.select_waveform(self._state.selected_waveform);
+                                                                        break;
+                                                                }
+                                                            };
+                                                }
+                                            
+                                                process(inputs, outputs, parameters){
+                                                    if(this.shutdown){ return false; }
+                                                    if(this.wasm == undefined){ return true; }
+                                            
+                                                    //collect inputs/outputs
+                                                        const output = outputs[0];
+                                                        const gainControl = inputs[0];
+                                                        const detuneControl = inputs[1];
+                                                        const dutyCycleControl = inputs[2];
+                                            
+                                                    //populate input buffers
+                                                        const gain_useFirstOnly = this._state.gain_useControl ? false : parameters.gain.length == 1;
+                                                        this.gainFrame.buffer.set( this._state.gain_useControl && gainControl[0] != undefined ? gainControl[0] : parameters.gain );
+                                            
+                                                        const detune_useFirstOnly = this._state.detune_useControl ? false : parameters.detune.length == 1;
+                                                        this.detuneFrame.buffer.set( this._state.detune_useControl && detuneControl[0] != undefined ? detuneControl[0] : parameters.detune );
+                                            
+                                                        const dutyCycle_useFirstOnly = this._state.dutyCycle_useControl ? false : parameters.dutyCycle.length == 1;
+                                                        this.dutyCycleFrame.buffer.set( this._state.dutyCycle_useControl && dutyCycleControl[0] != undefined ? dutyCycleControl[0] : parameters.dutyCycle );
+                                            
+                                                    //process data, and copy results to channels
+                                                        for(let channel = 0; channel < output.length; channel++){
+                                                            this.wasm.exports.process(
+                                                                gain_useFirstOnly,
+                                                                detune_useFirstOnly,
+                                                                dutyCycle_useFirstOnly,
+                                                            );
+                                                            output[channel].set(this.outputFrame.buffer);
+                                                        }
+                                                    
+                                                    return true;
+                                                }
+                                            }
+                                            registerProcessor('integrated_synthesizer_type_1', integrated_synthesizer_type_1);
+                                        `], { type: "text/javascript" }),
+                                        class:
+                                            class integrated_synthesizer_type_1 extends AudioWorkletNode {
+                                                static wasm_url = 'wasm/audio_processing/integrated_synthesizer_type_1.production.wasm';
+                                                // static wasm_url = 'wasm/audio_processing/integrated_synthesizer_type_1.development.wasm';
+                                                static fetch_promise;
+                                                static compiled_wasm;
+                                            
+                                                constructor(context, options={}){
+                                                    //populate options
+                                                        options.numberOfInputs = 3;
+                                                        options.numberOfOutputs = 1;
+                                                        options.channelCount = 1;
+                                            
+                                                    //generate class instance
+                                                        super(context, 'integrated_synthesizer_type_1', options);
+                                            
+                                                    //load wasm processor
+                                                        audio.audioWorklet.requestWasm(integrated_synthesizer_type_1, this);
+                                            
+                                                    //instance state
+                                                        this._state = {
+                                                            gain_useControl: false,
+                                                            detune_useControl: false,
+                                                            dutyCycle_useControl: false,
+                                            
+                                                            waveform: 'sine',
+                                                        };
+                                            
+                                                    //performance control
+                                                        this.perform = function(frequency, velocity=1){
+                                                            this.port.postMessage({command:'perform', value:{frequency:frequency, velocity:velocity}});
+                                                        };
+                                                        this.stopAll = function(){
+                                                            this.port.postMessage({command:'stopAll', value:undefined});
+                                                        };
+                                            
+                                                    //shutdown
+                                                        this.shutdown = function(){
+                                                            this.port.postMessage({command:'shutdown', value:undefined});
+                                                            this.port.close();
+                                                        };
+                                                    }
+                                                
+                                                //gain
+                                                    get gain(){
+                                                        return this.parameters.get('gain');
+                                                    }
+                                                    get gain_useControl(){
+                                                        return this._state.gain_useControl;
+                                                    }
+                                                    set gain_useControl(bool){
+                                                        this._state.gain_useControl = bool;
+                                                        this.port.postMessage({command:'gain_useControl', value:bool});
+                                                    }
+                                            
+                                                //detune
+                                                    get detune(){
+                                                        return this.parameters.get('detune');
+                                                    }
+                                                    get detune_useControl(){
+                                                        return this._state.detune_useControl;
+                                                    }
+                                                    set detune_useControl(bool){
+                                                        this._state.detune_useControl = bool;
+                                                        this.port.postMessage({command:'detune_useControl', value:bool});
+                                                    }
+                                            
+                                                //dutyCycle
+                                                    get dutyCycle(){
+                                                        return this.parameters.get('dutyCycle');
+                                                    }
+                                                    get dutyCycle_useControl(){
+                                                        return this._state.dutyCycle_useControl;
+                                                    }
+                                                    set dutyCycle_useControl(bool){
+                                                        this._state.dutyCycle_useControl = bool;
+                                                        this.port.postMessage({command:'dutyCycle_useControl', value:bool});
+                                                    }
+                                            
+                                                //waveform
+                                                    get waveform(){
+                                                        return this._state.waveform;
+                                                    }
+                                                    set waveform(value){ // sine / square / triangle
+                                                        this._state.waveform = value;
+                                                        this.port.postMessage({command:'waveform', value:value});
+                                                    }
                                             }
                                         ,
                                     },
@@ -7614,6 +7846,365 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             wasm:{
                                 list:[
                                     {
+                                        name:'audioBuffer_3',
+                                        worklet:new Blob([`
+                                            class audioBuffer_3 extends AudioWorkletProcessor {
+                                                static get parameterDescriptors(){
+                                                    return [
+                                                        {
+                                                            name: 'rate',
+                                                            defaultValue: 1,
+                                                            minValue: -8,
+                                                            maxValue: 8,
+                                                            automationRate: 'a-rate',
+                                                        },
+                                                    ];
+                                                }
+                                            
+                                                attachBuffers(){
+                                                    this.positionReadout = { pointer: this.wasm.exports.get_position_readout_pointer() };
+                                                    this.positionReadout.buffer = new Uint32Array(this.wasm.exports.memory.buffer, this.positionReadout.pointer, 1);
+                                                    this.outputFrame = { pointer: this.wasm.exports.get_output_pointer() };
+                                                    this.outputFrame.buffer = new Float32Array(this.wasm.exports.memory.buffer, this.outputFrame.pointer, 128);
+                                                    this.rateFrame = { pointer: this.wasm.exports.get_rate_pointer() };
+                                                    this.rateFrame.buffer = new Float32Array(this.wasm.exports.memory.buffer, this.rateFrame.pointer, 128);
+                                                }
+                                            
+                                                constructor(options){
+                                                    //construct class instance
+                                                        super(options);
+                                            
+                                                    //instance state
+                                                        this.shutdown = false;
+                                                        this._state = {
+                                                            rate_useControl: false,
+                                                        };
+                                            
+                                                        //setup message receiver
+                                                            const self = this;
+                                                            this.port.onmessage = function(event){
+                                                                switch(event.data.command){
+                                                                    //wasm initialization
+                                                                        case 'loadWasm':
+                                                                            WebAssembly.instantiate(
+                                                                                event.data.value,
+                                                                            ).then(result => {
+                                                                                //save wasm processor to instance
+                                                                                    self.wasm = result;
+                                            
+                                                                                //attach buffers
+                                                                                    self.attachBuffers();
+                                                
+                                                                                //assemble wasm buffers
+                                                                                    self.positionReadout = { pointer: self.wasm.exports.get_position_readout_pointer() };
+                                                                                    self.outputFrame = { pointer: self.wasm.exports.get_output_pointer() };
+                                                                                    self.rateFrame = { pointer: self.wasm.exports.get_rate_pointer() };
+                                                                                    self.audioBufferShovelFrame = { pointer: self.wasm.exports.get_audio_buffer_shovel_pointer() };
+                                            
+                                                                                //test
+                                                                                    self.transferAudioBufferDataIn(
+                                                                                        new Float32Array(new Array(441).fill(1).map((_,index) => Math.sin(2*Math.PI*(index/441))))
+                                                                                    );
+                                                                            });
+                                                                        break;
+                                                                    
+                                                                    //performance control
+                                                                        case 'play':
+                                                                            self.wasm.exports.play();
+                                                                        break;
+                                                                        case 'pause':
+                                                                            self.wasm.exports.pause();
+                                                                        break;
+                                                                        case 'return':
+                                                                            self.wasm.exports.return_play_position();
+                                                                        break;
+                                                                        case 'loop':
+                                                                            self.wasm.exports.loop_active(event.data.value);
+                                                                        break;
+                                                                        case 'section_start':
+                                                                            self.wasm.exports.section_start(event.data.value);
+                                                                        break;
+                                                                        case 'section_end':
+                                                                            self.wasm.exports.section_end(event.data.value);
+                                                                        break;
+                                            
+                                                                    //status
+                                                                        case 'getPosition': 
+                                                                            console.log('worklet time:',  globalThis.currentTime*1000);
+                                                                            console.log(self.positionReadout.buffer[0]);
+                                                                        break;
+                                                                            
+                                            
+                                                                    //use control
+                                                                        case 'rate_useControl': 
+                                                                            self._state.rate_useControl = event.data.value;
+                                                                        break;
+                                            
+                                                                    //shutdown
+                                                                        case 'shutdown':
+                                                                            self.shutdown = true;
+                                                                        break;
+                                                                }
+                                                            };
+                                                }
+                                            
+                                                transferAudioBufferDataIn(audio_data){
+                                                    this.wasm.exports.clear_audio_buffer();
+                                            
+                                                    const shovelSize = this.wasm.exports.get_shovel_size();
+                                                    const block_count = (Math.floor(audio_data.length / shovelSize) + 1);
+                                                    for(let block = 0; block < block_count; block++) {
+                                                        //reattach shovel buffer 
+                                                            this.audioBufferShovelFrame.buffer = new Float32Array(
+                                                                this.wasm.exports.memory.buffer, 
+                                                                this.wasm.exports.get_audio_buffer_shovel_pointer(), 
+                                                                shovelSize
+                                                            );
+                                            
+                                                        //shovel block in
+                                                            const data_to_send = audio_data.slice( block*shovelSize, (block+1)*shovelSize );
+                                                            this.audioBufferShovelFrame.buffer.set(data_to_send);
+                                                            this.wasm.exports.shovel_audio_data_in(data_to_send.length);
+                                                    }
+                                            
+                                                    this.attachBuffers();
+                                                }
+                                            
+                                                process(inputs, outputs, parameters){
+                                                    if(this.shutdown){ return false; }
+                                                    if(this.wasm == undefined){ return true; }
+                                            
+                                                    //collect inputs/outputs
+                                                        const output = outputs[0];
+                                                        const rateControl = inputs[0];
+                                            
+                                                    //populate input buffers
+                                                        const rate_useFirstOnly = this._state.rate_useControl ? false : parameters.rate.length == 1;
+                                                        this.rateFrame.buffer.set( this._state.rate_useControl && rateControl[0] != undefined ? rateControl[0] : parameters.rate );
+                                            
+                                                    //have wasm process data, and copy results to channels
+                                                        this.wasm.exports.process(
+                                                            rate_useFirstOnly,
+                                                        );
+                                                        for(let channel = 0; channel < output.length; channel++){
+                                                            output[channel].set(this.outputFrame.buffer);
+                                                        }
+                                            
+                                                    return true;
+                                                }
+                                            }
+                                            registerProcessor('audioBuffer_3', audioBuffer_3);
+                                        `], { type: "text/javascript" }),
+                                        class:
+                                            class audioBuffer_3 extends AudioWorkletNode{
+                                                // static wasm_url = 'wasm/audio_processing/audio_buffer_3.production.wasm';
+                                                static wasm_url = 'wasm/audio_processing/audio_buffer_3.development.wasm';
+                                                static fetch_promise;
+                                                static compiled_wasm;
+                                            
+                                                constructor(context, options={}){
+                                                    //populate options
+                                                        options.numberOfInputs = 1; //rate
+                                                        options.numberOfOutputs = 1;
+                                                        options.channelCount = 1;
+                                            
+                                                    //generate class instance
+                                                        super(context, 'audioBuffer_3', options);
+                                            
+                                                    //load wasm processor
+                                                        audio.audioWorklet.requestWasm(audioBuffer_3, this);
+                                            
+                                                    //instance state
+                                                        this._state = {
+                                                            loop: false,
+                                                            section: {
+                                                                start: 0,
+                                                                end: 1,
+                                                            },
+                                                        };
+                                            
+                                                    //performance control
+                                                        this.play = function(){
+                                                            this.port.postMessage({command:'play', value:undefined});
+                                                        };
+                                                        this.pause = function(){
+                                                            this.port.postMessage({command:'pause', value:undefined});
+                                                        };
+                                                        this.return = function(){
+                                                            this.port.postMessage({command:'return', value:undefined});
+                                                        };
+                                            
+                                                    //status
+                                                        this.getPosition = function(){
+                                                            console.log('node time:',  performance.now());
+                                                            this.port.postMessage({command:'getPosition', value:undefined});
+                                                        };
+                                            
+                                                    //shutdown
+                                                        this.shutdown = function(){
+                                                            this.port.postMessage({command:'shutdown', value:undefined});
+                                                            this.port.close();
+                                                        };
+                                                }
+                                            
+                                                get loop(){
+                                                    return this._state.loop;
+                                                }
+                                                set loop(bool){
+                                                    this._state.loop = bool;
+                                                    this.port.postMessage({command:'loop', value:bool});
+                                                }
+                                            
+                                                get section_start(){
+                                                    return this._state.section.start;
+                                                }
+                                                set section_start(position){
+                                                    this._state.section.start = position;
+                                                    this.port.postMessage({command:'section_start', value:position});
+                                                }
+                                                get section_end(){
+                                                    return this._state.section.end;
+                                                }
+                                                set section_end(position){
+                                                    this._state.section.end = position;
+                                                    this.port.postMessage({command:'section_end', value:position});
+                                                }
+                                            
+                                                get rate(){
+                                                    return this.parameters.get('rate');
+                                                }
+                                                get rate_useControl(){
+                                                    return this._state.rate_useControl;
+                                                }
+                                                set rate_useControl(bool){
+                                                    this._state.rate_useControl = bool;
+                                                    this.port.postMessage({command:'rate_useControl', value:bool});
+                                                }
+                                            }
+                                        ,
+                                    },
+                                    {
+                                        name:'audioBuffer_2',
+                                        worklet:new Blob([`
+                                            const debug = function(id, ...args){ console.log(id+':', args.join(' ')); };
+                                            
+                                            class audioBuffer_2 extends AudioWorkletProcessor{
+                                                static get parameterDescriptors(){
+                                                    return [{
+                                                            name: 'samples',
+                                                            defaultValue: 1,
+                                                            minValue: 1,
+                                                            maxValue: 100,
+                                                            automationRate: 'k-rate',
+                                                        }
+                                                    ];
+                                                }
+                                            
+                                                constructor(options){
+                                                    //construct class instance
+                                                        super(options);
+                                            
+                                                    //instance state
+                                                        this.shutdown = false;
+                                            
+                                                    //setup message receiver
+                                                        const self = this;
+                                                        this.port.onmessage = function(event){
+                                                            switch(event.data.command){
+                                                                //wasm initialization
+                                                                    case 'loadWasm':
+                                                                        WebAssembly.instantiate(
+                                                                            event.data.value,
+                                                                            // { env: { Math_random: Math.random, debug_: debug, } },
+                                                                        ).then(result => {
+                                                                            self.wasm = result;
+                                            
+                                                                            self.outputFrame = {};
+                                                                            self.audioBufferShovelFrame = {};
+                                            
+                                                                            self.attachBuffers();
+                                            
+                                                                            self.transferAudioBufferData(
+                                                                                new Float32Array(new Array(440).fill(1).map((_,index) => Math.sin(2*Math.PI*(index/440))))
+                                                                            );
+                                                                        });
+                                                                    break;
+                                                                
+                                                                //shutdown
+                                                                    case 'shutdown':
+                                                                        self.shutdown = true;
+                                                                    break;
+                                                            }
+                                                        };
+                                                }
+                                            
+                                                transferAudioBufferData(audio_data){
+                                                    const shovelSize = this.wasm.exports.get_shovel_size();
+                                            
+                                                    this.wasm.exports.clear_audio_buffer();
+                                                    for(let block = 0; block < (Math.floor(audio_data.length / shovelSize) + 1); block++) {
+                                                        const data_to_send = audio_data.slice( block*shovelSize, (block+1)*shovelSize );
+                                            
+                                                        this.audioBufferShovelFrame.buffer = new Float32Array(this.wasm.exports.memory.buffer, this.wasm.exports.get_audio_buffer_shovel_pointer(), shovelSize);
+                                                        this.audioBufferShovelFrame.buffer.set(data_to_send);
+                                            
+                                                        this.wasm.exports.shovel_audio_data_in(data_to_send.length);
+                                                    }
+                                            
+                                                    this.attachBuffers();
+                                                }
+                                                attachBuffers(){
+                                                    this.outputFrame.pointer = this.wasm.exports.get_output_pointer();
+                                                    this.outputFrame.buffer = new Float32Array(this.wasm.exports.memory.buffer, this.outputFrame.pointer, 128);
+                                                }
+                                            
+                                                process(inputs, outputs, parameters){
+                                                    if(this.shutdown){ return false; }
+                                                    if(this.wasm == undefined){ return true; }
+                                            
+                                                    //collect inputs/outputs
+                                                        const output = outputs[0];
+                                            
+                                                    //copy data in, process data, and copy results to channels
+                                                        this.wasm.exports.process();
+                                                        for(let channel = 0; channel < output.length; channel++){
+                                                            output[channel].set(this.outputFrame.buffer);
+                                                        }
+                                            
+                                                    return true;
+                                                }
+                                            }
+                                            registerProcessor('audioBuffer_2', audioBuffer_2);
+                                        `], { type: "text/javascript" }),
+                                        class:
+                                            class audioBuffer_2 extends AudioWorkletNode{
+                                                // static wasm_url = 'wasm/audio_processing/audio_buffer_2.production.wasm';
+                                                static wasm_url = 'wasm/audio_processing/audio_buffer_2.development.wasm';
+                                                static fetch_promise;
+                                                static compiled_wasm;
+                                            
+                                                constructor(context, options={}){
+                                                    //populate options
+                                                        options.numberOfInputs = 0;
+                                                        options.numberOfOutputs = 1;
+                                                        options.channelCount = 1;
+                                            
+                                                    //generate class instance
+                                                        super(context, 'audioBuffer_2', options);
+                                            
+                                                    //load wasm processor
+                                                        audio.audioWorklet.requestWasm(audioBuffer_2, this);
+                                            
+                                                    //shutdown
+                                                        this.shutdown = function(){
+                                                            this.port.postMessage({command:'shutdown', value:undefined});
+                                                            this.port.close();
+                                                        };
+                                                }
+                                            }
+                                        ,
+                                    },
+                                    {
                                         name:'squareWaveGenerator_wasm',
                                         worklet:new Blob([`
                                             class squareWaveGenerator_wasm extends AudioWorkletProcessor{
@@ -7717,113 +8308,70 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                         ,
                                     },
                                     {
-                                        name:'integrated_synthesizer_type_1',
+                                        name:'audioBuffer_1',
                                         worklet:new Blob([`
                                             const debug = function(id, ...args){ console.log(id+':', args.join(' ')); };
                                             
-                                            class integrated_synthesizer_type_1 extends AudioWorkletProcessor {
-                                                static detuneMux = 0.1;
-                                                static detuneBounds = 1/integrated_synthesizer_type_1.detuneMux;
-                                                static availableWaveforms = ['sine', 'square', 'triangle'];
-                                            
+                                            class audioBuffer_1 extends AudioWorkletProcessor{
                                                 static get parameterDescriptors(){
                                                     return [
                                                         {
-                                                            name: 'gain',
+                                                            name: 'rate',
                                                             defaultValue: 1,
-                                                            minValue: -1,
-                                                            maxValue: 1,
+                                                            minValue: -16,
+                                                            maxValue: 16,
                                                             automationRate: 'a-rate',
-                                                        },{
-                                                            name: 'detune',
-                                                            defaultValue: 0,
-                                                            minValue: -integrated_synthesizer_type_1.detuneBounds,
-                                                            maxValue: integrated_synthesizer_type_1.detuneBounds,
-                                                            automationRate: 'a-rate',
-                                                        },{
-                                                            name: 'dutyCycle',
-                                                            defaultValue: 0.5,
-                                                            minValue: 0,
-                                                            maxValue: 1,
-                                                            automationRate: 'a-rate',
-                                                        },
+                                                        }
                                                     ];
                                                 }
-                                            
+                                                
                                                 constructor(options){
                                                     //construct class instance
                                                         super(options);
                                             
                                                     //instance state
                                                         this.shutdown = false;
-                                                        this._state = {
-                                                            gain_useControl: false,
-                                                            detune_useControl: false,
-                                                            dutyCycle_useControl: false,
                                             
-                                                            selected_waveform: 0,
+                                                    //setup message receiver
+                                                        const self = this;
+                                                        this.port.onmessage = function(event){
+                                                            switch(event.data.command){
+                                                                //wasm initialization
+                                                                    case 'loadWasm':
+                                                                        WebAssembly.instantiate(
+                                                                            event.data.value,
+                                                                            { env: { Math_random: Math.random, debug_: debug, } },
+                                                                        ).then(result => {
+                                                                            self.wasm = result;
+                                            
+                                                                            self.outputFrame = {};
+                                                                            self.outputFrame.pointer = self.wasm.exports.get_output_pointer();
+                                                                            self.outputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.outputFrame.pointer, 128);
+                                            
+                                                                            self.audioDataShovelFrame = {};
+                                                                            self.audioDataShovelFrame.pointer = self.wasm.exports.get_audio_data_shovel_pointer();
+                                                                            self.audioDataShovelFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.audioDataShovelFrame.pointer, 128);
+                                            
+                                                                            self.rateFrame = {};
+                                                                            self.rateFrame.pointer = self.wasm.exports.get_rate_pointer();
+                                                                            self.rateFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.rateFrame.pointer, 128);
+                                            
+                                                                            self.transfer_audio_buffer_data(new Float32Array([1.0,2.0,3.0]));
+                                                                        });
+                                                                    break;
+                                                                
+                                                                //shutdown
+                                                                    case 'shutdown':
+                                                                        self.shutdown = true;
+                                                                    break;
+                                                            }
                                                         };
+                                                }
                                             
-                                                        //setup message receiver
-                                                            const self = this;
-                                                            this.port.onmessage = function(event){
-                                                                switch(event.data.command){
-                                                                    //wasm initialization
-                                                                        case 'loadWasm':
-                                                                            WebAssembly.instantiate(
-                                                                                event.data.value,
-                                                                                { env: { Math_random: Math.random, debug_: debug, } },
-                                                                            ).then(result => {
-                                                                                //save wasm processor to instance
-                                                                                    self.wasm = result;
-                                                
-                                                                                //assemble wasm buffers
-                                                                                    self.gainFrame = { pointer: self.wasm.exports.get_gain_pointer() };
-                                                                                    self.gainFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.gainFrame.pointer, 128);
-                                                                                    self.detuneFrame = { pointer: self.wasm.exports.get_detune_pointer() };
-                                                                                    self.detuneFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.detuneFrame.pointer, 128);
-                                                                                    self.dutyCycleFrame = { pointer: self.wasm.exports.get_duty_cycle_pointer() };
-                                                                                    self.dutyCycleFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.dutyCycleFrame.pointer, 128);
-                                                                                    self.outputFrame = { pointer: self.wasm.exports.get_output_pointer() };
-                                                                                    self.outputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.outputFrame.pointer, 128);
-                                                
-                                                                                //re-send waveform selection (just incase)
-                                                                                    self.wasm.exports.select_waveform(self._state.selected_waveform);
-                                                                            });
-                                                                        break;
-                                                                    
-                                                                    //performance control
-                                                                        case 'perform':
-                                                                            self.wasm.exports.perform(event.data.value.frequency, event.data.value.velocity);
-                                                                        break;
-                                                                        case 'stopAll':
-                                                                            self.wasm.exports.stop_all();
-                                                                        break;
-                                            
-                                                                    //shutdown
-                                                                        case 'shutdown':
-                                                                            self.shutdown = true;
-                                                                        break;
-                                                
-                                                                    //use control
-                                                                        case 'gain_useControl': 
-                                                                            self._state.gain_useControl = event.data.value;
-                                                                        break;
-                                                                        case 'detune_useControl': 
-                                                                            self._state.detune_useControl = event.data.value;
-                                                                        break;
-                                                                        case 'dutyCycle_useControl': 
-                                                                            self._state.dutyCycle_useControl = event.data.value;
-                                                                        break;
-                                                
-                                                                    //waveform
-                                                                        case 'waveform':
-                                                                            self._state.selected_waveform = integrated_synthesizer_type_1.availableWaveforms.indexOf(event.data.value);
-                                                                            if(self.wasm == undefined){ return; }
-                                                                            self.wasm.exports.select_waveform(self._state.selected_waveform);
-                                                                        break;
-                                                                }
-                                                            };
+                                                transfer_audio_buffer_data(data){
+                                                    const data_to_send = data.slice(0,128);
+                                                    this.audioDataShovelFrame.buffer.set(data_to_send);
+                                                    this.wasm.exports.shovel_load_audio_data(data_to_send.length);
                                                 }
                                             
                                                 process(inputs, outputs, parameters){
@@ -7832,122 +8380,57 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                             
                                                     //collect inputs/outputs
                                                         const output = outputs[0];
-                                                        const gainControl = inputs[0];
-                                                        const detuneControl = inputs[1];
-                                                        const dutyCycleControl = inputs[2];
+                                            
+                                                    //pre-calculations
+                                                        const rate_useFirstOnly = parameters.rate.length == 1;
                                             
                                                     //populate input buffers
-                                                        const gain_useFirstOnly = this._state.gain_useControl ? false : parameters.gain.length == 1;
-                                                        this.gainFrame.buffer.set( this._state.gain_useControl && gainControl[0] != undefined ? gainControl[0] : parameters.gain );
-                                            
-                                                        const detune_useFirstOnly = this._state.detune_useControl ? false : parameters.detune.length == 1;
-                                                        this.detuneFrame.buffer.set( this._state.detune_useControl && detuneControl[0] != undefined ? detuneControl[0] : parameters.detune );
-                                            
-                                                        const dutyCycle_useFirstOnly = this._state.dutyCycle_useControl ? false : parameters.dutyCycle.length == 1;
-                                                        this.dutyCycleFrame.buffer.set( this._state.dutyCycle_useControl && dutyCycleControl[0] != undefined ? dutyCycleControl[0] : parameters.dutyCycle );
+                                                        this.rateFrame.buffer.set( rate_useFirstOnly ? [parameters.rate[0]] : parameters.rate );
                                             
                                                     //process data, and copy results to channels
-                                                        for(let channel = 0; channel < output.length; channel++){
-                                                            this.wasm.exports.process(
-                                                                gain_useFirstOnly,
-                                                                detune_useFirstOnly,
-                                                                dutyCycle_useFirstOnly,
-                                                            );
-                                                            output[channel].set(this.outputFrame.buffer);
-                                                        }
-                                                    
+                                                        this.wasm.exports.process(
+                                                            rate_useFirstOnly,
+                                                        );
+                                                        output[0].set(this.outputFrame.buffer);
+                                            
+                                            
                                                     return true;
                                                 }
                                             }
-                                            registerProcessor('integrated_synthesizer_type_1', integrated_synthesizer_type_1);
+                                            registerProcessor('audioBuffer_1', audioBuffer_1);
                                         `], { type: "text/javascript" }),
                                         class:
-                                            class integrated_synthesizer_type_1 extends AudioWorkletNode {
-                                                // static wasm_url = 'wasm/audio_processing/integrated_synthesizer_type_1.production.wasm';
-                                                static wasm_url = 'wasm/audio_processing/integrated_synthesizer_type_1.development.wasm';
+                                            class audioBuffer_1 extends AudioWorkletNode{
+                                                // static wasm_url = 'wasm/audio_processing/audio_buffer.production.wasm';
+                                                static wasm_url = 'wasm/audio_processing/audio_buffer.development.wasm';
                                                 static fetch_promise;
                                                 static compiled_wasm;
                                             
                                                 constructor(context, options={}){
                                                     //populate options
-                                                        options.numberOfInputs = 3;
+                                                        options.numberOfInputs = 1;
                                                         options.numberOfOutputs = 1;
-                                                        options.channelCount = 1;
+                                                        options.channelCount = 2;
                                             
                                                     //generate class instance
-                                                        super(context, 'integrated_synthesizer_type_1', options);
+                                                        super(context, 'audioBuffer', options);
                                             
                                                     //load wasm processor
-                                                        audio.audioWorklet.requestWasm(integrated_synthesizer_type_1, this);
+                                                        audio.audioWorklet.requestWasm(audioBuffer, this);
                                             
                                                     //instance state
-                                                        this._state = {
-                                                            gain_useControl: false,
-                                                            detune_useControl: false,
-                                                            dutyCycle_useControl: false,
-                                            
-                                                            waveform: 'sine',
-                                                        };
-                                            
-                                                    //performance control
-                                                        this.perform = function(frequency, velocity=1){
-                                                            this.port.postMessage({command:'perform', value:{frequency:frequency, velocity:velocity}});
-                                                        };
-                                                        this.stopAll = function(){
-                                                            this.port.postMessage({command:'stopAll', value:undefined});
-                                                        };
+                                                        this._state = {};
                                             
                                                     //shutdown
                                                         this.shutdown = function(){
                                                             this.port.postMessage({command:'shutdown', value:undefined});
                                                             this.port.close();
                                                         };
-                                                    }
-                                                
-                                                //gain
-                                                    get gain(){
-                                                        return this.parameters.get('gain');
-                                                    }
-                                                    get gain_useControl(){
-                                                        return this._state.gain_useControl;
-                                                    }
-                                                    set gain_useControl(bool){
-                                                        this._state.gain_useControl = bool;
-                                                        this.port.postMessage({command:'gain_useControl', value:bool});
-                                                    }
+                                                }
                                             
-                                                //detune
-                                                    get detune(){
-                                                        return this.parameters.get('detune');
-                                                    }
-                                                    get detune_useControl(){
-                                                        return this._state.detune_useControl;
-                                                    }
-                                                    set detune_useControl(bool){
-                                                        this._state.detune_useControl = bool;
-                                                        this.port.postMessage({command:'detune_useControl', value:bool});
-                                                    }
-                                            
-                                                //dutyCycle
-                                                    get dutyCycle(){
-                                                        return this.parameters.get('dutyCycle');
-                                                    }
-                                                    get dutyCycle_useControl(){
-                                                        return this._state.dutyCycle_useControl;
-                                                    }
-                                                    set dutyCycle_useControl(bool){
-                                                        this._state.dutyCycle_useControl = bool;
-                                                        this.port.postMessage({command:'dutyCycle_useControl', value:bool});
-                                                    }
-                                            
-                                                //waveform
-                                                    get waveform(){
-                                                        return this._state.waveform;
-                                                    }
-                                                    set waveform(value){ // sine / square / triangle
-                                                        this._state.waveform = value;
-                                                        this.port.postMessage({command:'waveform', value:value});
-                                                    }
+                                                get rate(){
+                                                    return this.parameters.get('rate');
+                                                }
                                             }
                                         ,
                                     },
@@ -25087,2280 +25570,134 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
         _canvas_.library.audio.nowReady = function(){
             _canvas_.layers.declareLayerAsLoaded("library");
         };
-        _canvas_.core = new function(){
-            this.versionInformation = { tick:0, lastDateModified:{y:2021,m:1,d:11} };
-        
-            const core = this;
-        
-            const core_engine = new Worker("js/core_engine.js");
-            const communicationModuleMaker = function(communicationObject,callerName){
-                const self = this;
-                const devMode = false;
-                this.log = function(){
-                    if(!devMode){return;}
-                    let prefix = 'communicationModule['+callerName+']';
-                    console.log('%c'+prefix+(new Array(...arguments).join(' ')),'color:rgb(235, 52, 131); font-style:italic;' );
-                };
-                this.function = {};
-                this.delayedFunction = {};
+        const grapher = new function(){
+            let canvas;
+            let context;
             
-                let messageId = 0;
-                const messagingCallbacks = {};
-            
-                function generateMessageID(){
-                    self.log('::generateMessageID()'); //#development
-                    return messageId++;
-                }
-            
-                communicationObject.onmessage = function(encodedPacket){
-                    self.log('::communicationObject.onmessage('+JSON.stringify(encodedPacket)+')'); //#development
-                    self.log('::communicationObject.onmessage -> <encodedPacket>'); //#development
-                    if(devMode){console.log(encodedPacket);} //#development
-                    self.log('::communicationObject.onmessage -> </encodedPacket>'); //#development
-                    let message = encodedPacket.data;
-            
-                    if(!message.response){
-                        self.log('::communicationObject.onmessage -> message is a calling one'); //#development
-            
-                        if(message.cargo == undefined){
-                            self.log('::communicationObject.onmessage -> message cargo not found; aborting'); //#development
-                            return;
-                        }
-            
-                        if(message.cargo.function in self.function){
-                            self.log('::communicationObject.onmessage -> function "'+message.cargo.function+'" found'); //#development
-                            self.log('::communicationObject.onmessage -> function arguments: '+JSON.stringify(message.cargo.arguments)); //#development
-                            if(message.cargo.arguments == undefined){message.cargo.arguments = [];}
-                            if(message.id == null){
-                                self.log('::communicationObject.onmessage -> message ID missing; will not return any data'); //#development
-                                self.function[message.cargo.function](...message.cargo.arguments);
-                            }else{
-                                self.log('::communicationObject.onmessage -> message ID found; "'+message.id+'", will return any data'); //#development
-                                communicationObject.postMessage({
-                                    id:message.id,
-                                    response:true,
-                                    cargo:self.function[message.cargo.function](...message.cargo.arguments),
-                                });
-                            }
-                        }else if(message.cargo.function in self.delayedFunction){
-                            self.log('::communicationObject.onmessage -> delayed function "'+message.cargo.function+'" found'); //#development
-                            self.log('::communicationObject.onmessage -> delayed function arguments: '+JSON.stringify(message.cargo.arguments)); //#development
-                            if(message.cargo.arguments == undefined){message.cargo.arguments = [];}
-                            if(message.id == null){
-                                self.log('::communicationObject.onmessage -> message ID missing; will not return any data'); //#development
-                                self.delayedFunction[message.cargo.function](...message.cargo.arguments);
-                            }else{
-                                self.log('::communicationObject.onmessage -> message ID found; "'+message.id+'", will return any data'); //#development
-                                self.delayedFunction[message.cargo.function](...[function(returnedData){
-                                    communicationObject.postMessage({ id:message.id, response:true, cargo:returnedData });
-                                }].concat(message.cargo.arguments));
-                            }
-                        }else{
-                            self.log('::communicationObject.onmessage -> function "'+message.cargo.function+'" not found'); //#development
-                        }
-                    }else{
-                        self.log('::communicationObject.onmessage -> message is a response one'); //#development
-                        self.log('::communicationObject.onmessage -> message ID: '+message.id+' cargo: '+JSON.stringify(message.cargo)); //#development
-                        messagingCallbacks[message.id](message.cargo);
-                        delete messagingCallbacks[message.id];
-                    }
-                };
-            
-                this.run_withoutPromise = function(functionName,argumentList=[],transferables){
-                    self.log('::communicationObject.run_withoutPromise('+functionName+','+JSON.stringify(argumentList)+','+JSON.stringify(transferables)+')'); //#development
-                    communicationObject.postMessage({ id:undefined, response:false, cargo:{function:functionName,arguments:argumentList} }, transferables);
-                };
-                this.run_withPromise = function(functionName,argumentList=[],transferables){
-                    self.log('::communicationObject.run_withPromise('+functionName+','+JSON.stringify(argumentList)+','+JSON.stringify(transferables)+')'); //#development
-            
-                    let id = generateMessageID();
-                    self.log('::communicationObject.run_withPromise -> message ID:',id); //#development
-            
-                    return new Promise((resolve, reject) => {
-                        messagingCallbacks[id] = resolve;
-                        self.log('::communicationObject.run_withPromise -> sending calling message'); //#development
-                        communicationObject.postMessage({ id:id, response:false, cargo:{function:functionName,arguments:argumentList} }, transferables);
-                    });
-                };
+            this._width = 500;
+            this._height = 500;
+            this.newCanvas = function(){
+                canvas = document.createElement('canvas');
+                canvas.width = this._width;
+                canvas.height = this._height;
+                context = canvas.getContext('2d');
+                document.body.prepend(canvas);
             };
-            const communicationModule = new communicationModuleMaker(core_engine,'core_console');
         
-            _canvas_.setAttribute('tabIndex',1);
-            _canvas_.style.outline = "none";
-        
-            const dev = new function(){
-                const prefix = 'core_console';
-                const active = {
-                    service:false,
-                    interface:false,
-                    elementLibrary:{
-                        Group:false,
-                        Rectangle:false,
-                        RectangleWithOutline:false,
-                        Circle:false,
-                        CircleWithOutline:false,
-                        Polygon:false,
-                        PolygonWithOutline:false,
-                        Path:false,
-                        Image:false,
-                        Canvas:false,
-                        Character:false,
-                        CharacterString:false,
-                    },
-                    element:false,
-                    arrangement:false,
-                    render:false,
-                    viewport:false,
-                    stats:false,
-                    callback:false,
-                };
-            
-                this.log = {};
-                Object.entries(active).forEach(entry => {
-                    if(typeof entry[1] == 'object'){
-                        this.log[entry[0]] = {};
-                        Object.keys(active[entry[0]]).forEach(key => {
-                            this.log[entry[0]][key] = function(){
-                                if(active[entry[0]][key]){ 
-                                    console.log( prefix+'.'+entry[0]+'.'+key+arguments[0], ...(new Array(...arguments).slice(1)) );
-                                }
-                            };
-                        });
-                    }else{
-                        this.log[entry[0]] = function(){
-                            if(active[entry[0]]){ 
-                                console.log( prefix+'.'+entry[0]+arguments[0], ...(new Array(...arguments).slice(1)) );
-                            }
-                        };
-                    }
-                });
-            
-                const countActive = !false;
-                const countMemory = {};
-                this.count = function(commandTag){
-                    if(!countActive){return;}
-                    if(commandTag in countMemory){ countMemory[commandTag]++; }
-                    else{ countMemory[commandTag] = 1; }
-                };
-                this.countResults = function(){return countMemory;};
-            };
-            communicationModule.function.frame = function(data){
-                dev.log.service(' -> frame(',data); //#development
-                _canvas_.getContext("bitmaprenderer").transferFromImageBitmap(data);
-            };
-            communicationModule.function.ready = function(){
-                dev.log.service(' -> ready()'); //#development
-                core.ready();
-            };
-            communicationModule.function.setCanvasSize = function(width,height){
-                dev.log.service(' -> setCanvasSize(',width,height); //#development
-                _canvas_.setAttribute('width',width);
-                _canvas_.setAttribute('height',height);
+            this.clear = function(){
+                context.fillStyle = 'rgba(255,255,255,1)';
+                context.fillRect(0,0,canvas.width,canvas.height);
             }
-            
-            communicationModule.function.updateElement = function(ele_id, data={}){
-                dev.log.service(' -> updateElement(',ele_id,data); //#development
-                const proxyElement = _canvas_.core.element.getElementById(ele_id);
-                if(proxyElement.__updateValues != undefined){ proxyElement.__updateValues(data); }
+            this.drawLine = function(point_a,point_b,style,strokeWidth=1){
+                context.strokeStyle = style;
+                context.lineWidth = strokeWidth;
+                context.beginPath();
+                context.moveTo(point_a.x,point_a.y);
+                context.lineTo(point_b.x,point_b.y);
+                context.stroke();
+                context.fill();
+            }
+            this.drawCircle = function(x,y,r,style,strokeStyle,strokeWidth=1){
+                context.fillStyle = style;
+                context.strokeStyle = strokeStyle;
+                context.lineWidth = strokeWidth;
+                context.beginPath();
+                context.arc(x, y, r, 0, 2*Math.PI);
+                context.fill();
+                if(strokeStyle != undefined){context.stroke();}
             };
-            communicationModule.function.runElementCallback = function(ele_id, data={}){
-                dev.log.service(' -> runElementCallback(',ele_id,data); //#development
-                const proxyElement = _canvas_.core.element.getElementById(ele_id);
-                if(proxyElement.__runCallback != undefined){ proxyElement.__runCallback(data); }
-            };
-            
-            communicationModule.function.getCanvasAttributes = function(attributeNames=[],prefixActiveArray=[]){
-                dev.log.service(' -> getCanvasAttributes(',attributeNames,prefixActiveArray); //#development
-                return attributeNames.map((name,index) => {
-                    return _canvas_.getAttribute((prefixActiveArray[index]?__canvasPrefix:'')+name);
-                });    
-            };
-            communicationModule.function.setCanvasAttributes = function(attributeNames=[],values=[],prefixActiveArray=[]){
-                dev.log.service(' -> setCanvasAttributes(',attributeNames,values,prefixActiveArray); //#development
-                attributeNames.map((name,index) => {
-                    _canvas_.setAttribute((prefixActiveArray[index]?__canvasPrefix:'')+name, values[index]);
-                });
-            };
-            
-            communicationModule.function.getCanvasParentAttributes = function(attributeNames=[],prefixActiveArray=[]){
-                dev.log.service(' -> getCanvasParentAttributes(',attributeNames,prefixActiveArray); //#development
-                return attributeNames.map((name,index) => {
-                    return _canvas_.parentElement[(prefixActiveArray[index]?__canvasPrefix:'')+name];
-                });
-            };
-            
-            communicationModule.function.getDocumentAttributes = function(attributeNames=[]){
-                dev.log.service(' -> getDocumentAttributes(',attributeNames); //#development
-                return attributeNames.map(attribute => {
-                    return eval('document.'+attribute);
-                });
-            };
-            communicationModule.function.setDocumentAttributes = function(attributeNames=[],values=[]){
-                dev.log.service(' -> setDocumentAttributes(',attributeNames,values); //#development
-                return attributeNames.map((attribute,index) => {
-                    eval('document.'+attribute+' = "'+values[index]+'"');
-                });
-            };
-            communicationModule.function.getWindowAttributes = function(attributeNames=[]){
-                dev.log.service(' -> getWindowAttributes(',attributeNames); //#development
-                return attributeNames.map(attribute => {
-                    return eval('window.'+attribute);
-                });
-            };
-            communicationModule.function.setWindowAttributes = function(attributes=[]){
-                dev.log.service(' -> setWindowAttributes(',attributes); //#development
-                attributes.map((attribute,index) => {
-                    eval('window.'+attribute.name+' = "'+attribute.value+'"');
-                });
-            };
-            const interface = new function(){
-                this.operator = new function(){
-                    this.element = new function(){
-                        //element library
-                            this.getAvailableElements = function(){
-                                dev.log.interface('.operator.element.getAvailableElements()'); //#development
-                                return communicationModule.run_withPromise('operator__element__getAvailableElements');
-                            };
-                        //basic management
-                            this.create = function(type, name){
-                                dev.log.interface('.operator.element.create(',type, name); //#development
-                                return communicationModule.run_withPromise('operator__element__create', [type, name]);
-                            };
-                            this.delete = function(element_id){
-                                dev.log.interface('.operator.element.delete(',element_id); //#development
-                                communicationModule.run_withoutPromise('operator__element__delete', [element_id]);
-                            };
-                            this.deleteAllCreated = function(){
-                                dev.log.interface('.operator.element.deleteAllCreated()'); //#development
-                                communicationModule.run_withoutPromise('operator__element__deleteAllCreated');
-                            };
-                        //get element
-                            this.getTypeById = function(element_id){
-                                dev.log.interface('.operator.element.getTypeById(',element_id); //#development
-                                return communicationModule.run_withPromise('operator__element__getTypeById', [element_id]);
-                            };
-                        //execute method
-                            this.executeMethod = new function(){
-                                //hierarchy and identity
-                                    this.getElementType = function(id){
-                                        dev.log.interface('.operator.element.getElementType(',id); //#development
-                                        communicationModule.run_withPromise('operator__element__executeMethod__getElementType', [id]);
-                                    };
-                                    this.getName = function(id){
-                                        dev.log.interface('.operator.element.getName(',id); //#development
-                                        communicationModule.run_withPromise('operator__element__executeMethod__getName', [id]);
-                                    };
-                                    this.setName = function(id, new_name){
-                                        dev.log.interface('.operator.element.setName(',id, new_name); //#development
-                                        communicationModule.run_withoutPromise('operator__element__executeMethod__getName', [id, new_name]);
-                                    };
-                                    this.getParentId = function(id){
-                                        dev.log.interface('.operator.element.getParentId(',id); //#development
-                                        communicationModule.run_withPromise('operator__element__executeMethod__getParentId', [id]);
-                                    };
-                                //position
-                                    this.setX = function(id, x){
-                                        dev.log.interface('.operator.element.setX(',id, x); //#development
-                                        communicationModule.run_withoutPromise('operator__element__executeMethod__setX', [id, x]);
-                                    };
-                                    this.setY = function(id, y){
-                                        dev.log.interface('.operator.element.setY(',id, y); //#development
-                                        communicationModule.run_withoutPromise('operator__element__executeMethod__setY', [id, y]);
-                                    };
-                                    this.setAngle = function(id, angle){
-                                        dev.log.interface('.operator.element.setAngle(',id, angle); //#development
-                                        communicationModule.run_withoutPromise('operator__element__executeMethod__setAngle', [id, angle]);
-                                    };
-                                    this.setScale = function(id, scale){
-                                        dev.log.interface('.operator.element.setScale(',id, scale); //#development
-                                        communicationModule.run_withoutPromise('operator__element__executeMethod__setScale', [id, scale]);
-                                    };
-                                //other
-                                    this.getIgnored = function(id){
-                                        dev.log.interface('.operator.element.getIgnored(',id); //#development
-                                        return communicationModule.run_withPromise('operator__element__executeMethod__getIgnored', [id]);
-                                    };
-                                    this.setIgnored = function(id, bool){
-                                        dev.log.interface('.operator.element.setIgnored(',id, bool); //#development
-                                        communicationModule.run_withoutPromise('operator__element__executeMethod__setIgnored', [id, bool]);
-                                    };
-                                //universal attribute
-                                    this.unifiedAttribute = function(id,data,transferables){
-                                        dev.log.interface('.operator.element.unifiedAttribute(',id,data,transferables); //#development
-                                        communicationModule.run_withoutPromise('operator__element__executeMethod__unifiedAttribute', [id, data], transferables);
-                                    };
-                                //addressing
-                                    this.getAddress = function(id){
-                                        dev.log.interface('.operator.element.getAddress(',id); //#development
-                                        return communicationModule.run_withPromise('operator__element__executeMethod__getAddress', [id]);
-                                    };
-                                //extremities
-                                    this.getAllowComputeExtremities = function(id){
-                                        dev.log.interface('.operator.element.getAllowComputeExtremities(',id); //#development
-                                        return communicationModule.run_withPromise('operator__element__executeMethod__getAllowComputeExtremities', [id]);
-                                    };
-                                    this.setAllowComputeExtremities = function(id, bool){
-                                        dev.log.interface('.operator.element.setAllowComputeExtremities(',id, bool); //#development
-                                        communicationModule.run_withoutPromise('operator__element__executeMethod__setAllowComputeExtremities', [id, bool]);
-                                    };
-                                //render
-                                    this.getDotFrame = function(id){
-                                        dev.log.interface('.operator.element.getDotFrame(',id); //#development
-                                        return communicationModule.run_withPromise('operator__element__executeMethod__getDotFrame', [id]);
-                                    };
-                                    this.setDotFrame = function(id, bool){
-                                        dev.log.interface('.operator.element.setDotFrame(',id, bool); //#development
-                                        communicationModule.run_withoutPromise('operator__element__executeMethod__setDotFrame', [id, bool]);
-                                    };
-                                //info/dump
-                                    this.info = function(id){
-                                        dev.log.interface('.operator.element.info(',id); //#development
-                                        return communicationModule.run_withPromise('operator__element__executeMethod__info', [id]);
-                                    };
-                                    this.dump = function(id){
-                                        dev.log.interface('.operator.element.dump(',id); //#development
-                                        communicationModule.run_withoutPromise('operator__element__executeMethod__dump', [id]);
-                                    };
-                                this.Group = new function(){
-                                    this.setUnifiedAttribute = function(id, x, y, angle, scale, heed_camera){
-                                        dev.log.interface('.operator.element.Group.setUnifiedAttribute(',id, x, y, angle, scale, heed_camera); //#development
-                                        communicationModule.run_withoutPromise('operator__element__executeMethod__Group__setUnifiedAttribute', [id, x, y, angle, scale, heed_camera]);
-                                    };
-                    
-                                    this.children = function(id){
-                                        dev.log.interface('.operator.element.Group.children(',id); //#development
-                                        return communicationModule.run_withPromise('operator__element__executeMethod__Group__children', [id]);
-                                    };
-                                    this.getChildByName = function(id, name){
-                                        dev.log.interface('.operator.element.Group.getChildByName(',id, name); //#development
-                                        return communicationModule.run_withPromise('operator__element__executeMethod__Group__getChildByName', [id, name]);
-                                    };
-                    
-                                    this.append = function(parent_id, child_id){
-                                        dev.log.interface('.operator.element.Group.append(',parent_id, child_id); //#development
-                                        communicationModule.run_withoutPromise('operator__element__executeMethod__Group__append', [parent_id, child_id]);
-                                    };
-                                    this.prepend = function(parent_id, child_id){
-                                        dev.log.interface('.operator.element.Group.prepend(',parent_id, child_id); //#development
-                                        communicationModule.run_withoutPromise('operator__element__executeMethod__Group__prepend', [parent_id, child_id]);
-                                    };
-                                    this.remove = function(parent_id, child_id){
-                                        dev.log.interface('.operator.element.Group.remove(',parent_id, child_id); //#development
-                                        communicationModule.run_withoutPromise('operator__element__executeMethod__Group__remove', [parent_id, child_id]);
-                                    };
-                                    this.clear = function(parent_id){
-                                        dev.log.interface('.operator.element.Group.clear(',parent_id); //#development
-                                        communicationModule.run_withoutPromise('operator__element__executeMethod__Group__clear', [parent_id]);
-                                    };
-                                    this.shift = function(parent_id, child_id, new_position){
-                                        dev.log.interface('.operator.element.Group.shift(',parent_id, child_id, new_position); //#development
-                                        communicationModule.run_withoutPromise('operator__element__executeMethod__Group__shift', [parent_id, child_id, new_position]);
-                                    };
-                                    this.replaceWithTheseChildren = function(id, new_elements){
-                                        dev.log.interface('.operator.element.Group.replaceWithTheseChildren(',id, new_elements); //#development
-                                        communicationModule.run_withoutPromise('operator__element__executeMethod__Group__replace_with_these_children', [id, new_elements]);
-                                    };
-                    
-                                    this.getElementsUnderPoint = function(id, x, y){
-                                        dev.log.interface('.operator.element.Group.getElementsUnderPoint(',id, x, y); //#development
-                                        return communicationModule.run_withPromise('operator__element__executeMethod__Group__getElementsUnderPoint', [id, x, y]);
-                                    };
-                                    this.getElementsUnderArea = function(id, points){
-                                        dev.log.interface('.operator.element.Group.getElementsUnderArea(',id, points); //#development
-                                        return communicationModule.run_withPromise('operator__element__executeMethod__Group__getElementsUnderArea', [id, points]);
-                                    };
-                    
-                                    this.stencil = function(id, stencil_id){
-                                        dev.log.interface('.operator.element.Group.stencil(',id, stencil_id); //#development
-                                        communicationModule.run_withoutPromise('operator__element__executeMethod__Group__stencil', [id, stencil_id]);
-                                    };
-                                    this.getClipActive = function(id){
-                                        dev.log.interface('.operator.element.Group.getClipActive(',id); //#development
-                                        return communicationModule.run_withPromise('operator__element__executeMethod__Group__getClipActive', [id]);
-                                    };
-                                    this.setClipActive = function(id, bool){
-                                        dev.log.interface('.operator.element.Group.setClipActive(',id, bool); //#development
-                                        communicationModule.run_withoutPromise('operator__element__executeMethod__Group__setClipActive', [id, bool]);
-                                    };
-                                };
-                                // this.Rectangle = new function(){
-                                //     this.getWidth = function(id){
-                                //         dev.log.interface('.operator.element.Rectangle.getWidth(',id); //#development
-                                //         return communicationModule.run_withPromise('operator__element__executeMethod__Rectangle__getWidth', [id]);
-                                //     };
-                                //     this.setWidth = function(id, width){
-                                //         dev.log.interface('.operator.element.Rectangle.setWidth(',id, width); //#development
-                                //         communicationModule.run_withoutPromise('operator__element__executeMethod__Rectangle__setWidth', [id, width]);
-                                //     };
-                                //     this.getHeight = function(id){
-                                //         dev.log.interface('.operator.element.Rectangle.getHeight(',id); //#development
-                                //         return communicationModule.run_withPromise('operator__element__executeMethod__Rectangle__getHeight', [id]);
-                                //     };
-                                //     this.setHeight = function(id, height){
-                                //         dev.log.interface('.operator.element.Rectangle.setHeight(',id, height); //#development
-                                //         communicationModule.run_withoutPromise('operator__element__executeMethod__Rectangle__setHeight', [id, height]);
-                                //     };
-                                //     this.getAnchor = function(id){
-                                //         dev.log.interface('.operator.element.Rectangle.getAnchor(',id); //#development
-                                //         return communicationModule.run_withPromise('operator__element__executeMethod__Rectangle__getAnchor', [id]);
-                                //     };
-                                //     this.setAnchor = function(id, x, y){
-                                //         dev.log.interface('.operator.element.Rectangle.setAnchor(',id, x, y); //#development
-                                //         communicationModule.run_withoutPromise('operator__element__executeMethod__Rectangle__setAnchor', [id, x, y]);
-                                //     };
-                                //     this.getColour = function(id){
-                                //         dev.log.interface('.operator.element.Rectangle.getColour(',id); //#development
-                                //         return communicationModule.run_withPromise('operator__element__executeMethod__Rectangle__getColour', [id]);
-                                //     };
-                                //     this.setColour = function(id, r, g, b, a){
-                                //         dev.log.interface('.operator.element.Rectangle.setColour(',id, r, g, b, a); //#development
-                                //         communicationModule.run_withoutPromise('operator__element__executeMethod__Rectangle__setColour', [id, r, g, b, a]);
-                                //     };
-                    
-                                //     this.setUnifiedAttribute = function(id, x, y, angle, scale, width, height, anchor_x, anchor_y, colour_r, colour_g, colour_b, colour_a){
-                                //         dev.log.interface('.operator.element.Rectangle.setUnifiedAttribute(',id, x, y, angle, scale, width, height, anchor_x, anchor_y, colour_r, colour_g, colour_b, colour_a); //#development
-                                //         communicationModule.run_withoutPromise('operator__element__executeMethod__Rectangle__setUnifiedAttribute', [id, x, y, angle, scale, width, height, anchor_x, anchor_y, colour_r, colour_g, colour_b, colour_a]);
-                                //     };
-                                // };
-                            };
-                        //misc
-                            this.createSetAppend = function(type, name, data, group_id){
-                                return communicationModule.run_withPromise('operator__element___createSetAppend', [type, name, data, group_id]);
-                            }
-                            this._dump = function(){
-                                communicationModule.run_withoutPromise('operator__element___dump');
-                            };
-                    };
-                    
-                    this.arrangement = new function(){
-                        //root
-                            this.prepend = function(element_id){
-                                dev.log.interface('.operator.arrangement.prepend(',element_id); //#development
-                                communicationModule.run_withoutPromise('operator__arrangement__prepend', [element_id]);
-                            };
-                            this.append = function(element_id){
-                                dev.log.interface('.operator.arrangement.append(',element_id); //#development
-                                communicationModule.run_withoutPromise('operator__arrangement__append', [element_id]);
-                            };
-                            this.remove = function(element_id){
-                                dev.log.interface('.operator.arrangement.remove(',element_id); //#development
-                                communicationModule.run_withoutPromise('operator__arrangement__remove', [element_id]);
-                            };
-                            this.clear = function(){
-                                dev.log.interface('.operator.arrangement.clear()'); //#development
-                                communicationModule.run_withoutPromise('operator__arrangement__clear');
-                            };
-                        //discovery
-                            this.getElementByAddress = function(address){
-                                dev.log.interface('.operator.arrangement.getElementByAddress(',address); //#development
-                                return communicationModule.run_withPromise('operator__arrangement__getElementByAddress', [address]);
-                            };
-                            this.getElementsUnderPoint = function(x,y){
-                                dev.log.interface('.operator.arrangement.getElementsUnderPoint(',x,y); //#development
-                                return communicationModule.run_withPromise('operator__arrangement__getElementsUnderPoint', [x,y]);
-                            };
-                            this.getElementsUnderArea = function(points){
-                                dev.log.interface('.operator.arrangement.getElementsUnderArea(',points); //#development
-                                return communicationModule.run_withPromise('operator__arrangement__getElementsUnderArea', [points]);
-                            };
-                        //misc
-                            this.printTree = function(mode){
-                                dev.log.interface('.operator.arrangement.printTree(',mode); //#development
-                                communicationModule.run_withoutPromise('operator__arrangement__printTree', [mode]);
-                            };
-                            this.printSurvey = function(){
-                                dev.log.interface('.operator.arrangement.printSurvey()'); //#development
-                                communicationModule.run_withoutPromise('operator__arrangement__printSurvey');
-                            };
-                            this._dump = function(){
-                                dev.log.interface('.operator.arrangement._dump()'); //#development
-                                communicationModule.run_withoutPromise('operator__arrangement___dump');
-                            };
-                    };
-                    
-                    this.render = new function(){
-                        //canvas and webGL context
-                            this.clearColour = function(colour){
-                                dev.log.interface('.operator.render.clearColour(',colour); //#development
-                                communicationModule.run_withoutPromise('operator__render__clearColour', [colour]);
-                            };
-                            this.getCanvasSize = function(){
-                                dev.log.interface('.operator.render.getCanvasSize()'); //#development
-                                return communicationModule.run_withPromise('operator__render__getCanvasSize', undefined);
-                            };
-                            this.adjustCanvasSize = function(newWidth, newHeight){
-                                dev.log.interface('.operator.render.adjustCanvasSize(',newWidth, newHeight); //#development
-                                communicationModule.run_withoutPromise('operator__render__adjustCanvasSize', [newWidth, newHeight]);
-                            };
-                            this.refreshCoordinates = function(){
-                                dev.log.interface('.operator.render.refreshCoordinates()'); //#development
-                                communicationModule.run_withoutPromise('operator__render__refreshCoordinates');
-                            };
-                            this.refresh = function(){
-                                dev.log.interface('.operator.render.refresh()'); //#development
-                                communicationModule.run_withoutPromise('operator__render__refresh');
-                            };
-                        //frame rate control
-                            this.activeLimitToFrameRate = function(a){
-                                dev.log.interface('.operator.render.activeLimitToFrameRate(',a); //#development
-                                communicationModule.run_withoutPromise('operator__render__activeLimitToFrameRate', [a]);
-                            };
-                            this.frameRateLimit = function(a){
-                                dev.log.interface('.operator.render.frameRateLimit(',a); //#development
-                                communicationModule.run_withoutPromise('operator__render__frameRateLimit', [a]);
-                            };
-                            this.allowFrameSkipping = function(a){
-                                dev.log.interface('.operator.render.allowFrameSkipping(',a); //#development
-                                communicationModule.run_withoutPromise('operator__render__allowFrameSkipping', [a]);
-                            };
-                        //actual render
-                            this.frame = function(noClear){
-                                dev.log.interface('.operator.render.frame(',noClear); //#development
-                                communicationModule.run_withoutPromise('operator__render__frame', [noClear]);
-                            };
-                            this.active = function(bool){
-                                dev.log.interface('.operator.render.active(',bool); //#development
-                                communicationModule.run_withoutPromise('operator__render__active', [bool]);
-                            };
-                        //misc
-                            this.drawDot = function(x,y,r,colour){
-                                dev.log.interface('.operator.render.drawDot(',x,y,r,colour); //#development
-                                communicationModule.run_withoutPromise('operator__render__drawDot', [x,y,r,colour]);
-                            };
-                            this._dump = function(){
-                                dev.log.interface('.operator.render._dump()'); //#development
-                                communicationModule.run_withoutPromise('operator__render___dump');
-                            };
-                    }
-                    
-                    this.viewport = new function(){
-                        //camera position
-                            this.position = function(x,y){
-                                dev.log.interface('.operator.viewport.position(',x,y); //#development
-                                communicationModule.run_withoutPromise('operator__viewport__position', [x,y]);
-                            };
-                            this.scale = function(s){
-                                dev.log.interface('.operator.viewport.scale(',s); //#development
-                                communicationModule.run_withoutPromise('operator__viewport__scale', [s]);
-                            };
-                            this.angle = function(a){
-                                dev.log.interface('.operator.viewport.angle(',a); //#development
-                                communicationModule.run_withoutPromise('operator__viewport__angle', [a]);
-                            };
-                            this.anchor = function(x,y){
-                                dev.log.interface('.operator.viewport.anchor(',x,y); //#development
-                                communicationModule.run_withoutPromise('operator__viewport__anchor', [x,y]);
-                            };
-                            this.scaleAroundWindowPoint = function(s,x,y){
-                                dev.log.interface('.operator.viewport.scaleAroundWindowPoint(',s,x,y); //#development
-                                return communicationModule.run_withPromise('operator__viewport__scaleAroundWindowPoint', [s,x,y]);
-                            };
-                    
-                        //mouse interaction
-                            this.getElementsUnderPoint = function(x,y){
-                                dev.log.interface('.operator.viewport.getElementsUnderPoint(',x,y); //#development
-                                return communicationModule.run_withPromise('operator__viewport__getElementsUnderPoint', [x,y]);
-                            };
-                            this.getElementsUnderArea = function(points){
-                                dev.log.interface('.operator.viewport.getElementsUnderArea(',points); //#development
-                                return communicationModule.run_withPromise('operator__viewport__getElementsUnderArea', [points]);
-                            };
-                            this.stopMouseScroll = function(bool){
-                                dev.log.interface('.operator.viewport.stopMouseScroll(',bool); //#development
-                                communicationModule.run_withoutPromise('operator__viewport__stopMouseScroll', [bool]);
-                            };
-                    
-                        //misc
-                            this.refresh = function(){
-                                dev.log.interface('.operator.viewport.refresh()'); //#development
-                                communicationModule.run_withoutPromise('operator__viewport___refresh');
-                            };
-                            this._dump = function(){
-                                dev.log.interface('.operator.viewport._dump()'); //#development
-                                communicationModule.run_withoutPromise('operator__viewport___dump');
-                            };
-                    };
-                    
-                    this.stats = new function(){
-                        this.active = function(bool){
-                            dev.log.interface('.operator.stats.active(',bool); //#development
-                            communicationModule.run_withoutPromise('operator__stats__active', [bool]);
-                        };
-                        this.getReport = function(){
-                            dev.log.interface('.operator.stats.getReport()'); //#development
-                            return communicationModule.run_withPromise('operator__stats__getReport');
-                        };
-                        this.elementRenderDecision_clearData = function(){
-                            dev.log.interface('.operator.stats.elementRenderDecision_clearData()'); //#development
-                            return communicationModule.run_withPromise('operator__stats__elementRenderDecision_clearData');
-                        };
-                        this._dump = function(){
-                            dev.log.interface('.operator.stats._dump()'); //#development
-                            communicationModule.run_withoutPromise('operator__stats___dump');
-                        };
-                    };
-                    
-                    this.callback = new function(){
-                        this.listCallbackTypes = function(){
-                            dev.log.interface('.operator.callback.listCallbackTypes()'); //#development
-                            return communicationModule.run_withPromise('operator__callback__listCallbackTypes');
-                        };
-                        this.listActivationModes = function(){
-                            dev.log.interface('.operator.callback.listActivationModes()'); //#development
-                            return communicationModule.run_withPromise('operator__callback__listActivationModes');
-                        };
-                        this.attachCallback = function(id, callbackType){
-                            dev.log.interface('.operator.callback.attachCallback(',id, callbackType); //#development
-                            communicationModule.run_withoutPromise('operator__callback__attachCallback', [id, callbackType]);
-                        };
-                        this.removeCallback = function(id, callbackType){
-                            dev.log.interface('.operator.callback.removeCallback(',id, callbackType); //#development
-                            communicationModule.run_withoutPromise('operator__callback__removeCallback', [id, callbackType]);
-                        };
-                        this.callbackActivationMode = function(mode){
-                            dev.log.interface('.operator.callback.callbackActivationMode(',mode); //#development
-                            communicationModule.run_withoutPromise('operator__callback__callbackActivationMode', [mode]);
-                        };
-                        this._dump = function(){
-                            dev.log.interface('.operator.callback._dump()'); //#development
-                            communicationModule.run_withoutPromise('operator__callback___dump');
-                        };
-                    };
-                    
-                    this.meta = new function(){
-                        this.refresh = function(){
-                            return communicationModule.run_withPromise('operator__meta__refresh');
-                        };
-                    };
-                };
-            };
-            this.if = interface;
-            this.element = new function(){
-                const elementLibrary = new function(){
-                    const genericElement = function(_type, _name){
-                        const self = this;
-                    
-                        //type
-                            const type = _type;
-                            this.getType = function(){return type;};
-                    
-                        //id
-                            let id = undefined;
-                            this.getId = function(){return id;};
-                            this.__onIdReceived = function(){};
-                            this.__id = function(a){
-                                dev.log.elementLibrary[type]('['+self.getAddress()+'].__id(',a); //#development
-                                id = a;
-                    
-                                __unifiedAttribute(__unifiedAttribute());
-                                Object.entries(cashedCallbacks).forEach(entry => { 
-                                    core.callback.attachCallback(this, entry[0], entry[1]);
-                                });
-                    
-                                if(this.__repush != undefined){this.__repush();}
-                                if(this.__onIdReceived){this.__onIdReceived(id);}
-                            };
-                    
-                        //name
-                            let name = _name;
-                            this.getName = function(){return name;};
-                    
-                        //hierarchy
-                            this.parent = undefined;
-                            this.getAddress = function(){
-                                return (this.parent != undefined && this.parent.getId() != 0 ? this.parent.getAddress() : '') + '/' + name;
-                            };
-                            this.getOffset = function(){
-                                let output = {x:0,y:0,scale:1,angle:0};
-                    
-                                if(this.parent){
-                                    const offset = this.parent.getOffset();
-                                    const point = _canvas_.library.math.cartesianAngleAdjust(cashedAttributes.x,cashedAttributes.y,offset.angle);
-                                    output = { 
-                                        x: point.x*offset.scale + offset.x,
-                                        y: point.y*offset.scale + offset.y,
-                                        scale: offset.scale * cashedAttributes.scale,
-                                        angle: offset.angle + cashedAttributes.angle,
-                                    };
-                                }else{
-                                    output = {x:cashedAttributes.x ,y:cashedAttributes.y ,scale:cashedAttributes.scale ,angle:cashedAttributes.angle};
-                                }
-                    
-                                return output;
-                            };
-                    
-                        //attributes
-                            const cashedAttributes = {};
-                            const transferableAttributes = [];
-                            this.__setupSimpleAttribute = function(name,defaultValue){
-                                cashedAttributes[name] = defaultValue;
-                                this[name] = function(a){
-                                    if(a == undefined){ return cashedAttributes[name]; }
-                                    if(a == cashedAttributes[name]){ return; } //no need to set things to what they already are
-                                    dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].'+name+'(',...arguments); //#development
-                                    cashedAttributes[name] = a;
-                                    if(this.getId() != undefined){
-                                        const obj = {};
-                                        obj[name] = a;
-                                        interface.operator.element.executeMethod.unifiedAttribute(this.getId(),obj);
-                                    }
-                                };
-                            }
-                            this.__setupTransferableAttribute = function(name,defaultValue){
-                                transferableAttributes.push(name);
-                                cashedAttributes[name] = defaultValue;
-                                this[name] = function(a){
-                                    if(a == undefined){ return cashedAttributes[name]; }
-                                    if(a == cashedAttributes[name]){ return; } //no need to set things to what they already are
-                                    dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].'+name+'(',...arguments); //#development
-                                    cashedAttributes[name] = a;
-                                    if(this.getId() != undefined){
-                                        const obj = {};
-                                        obj[name] = a;
-                                        interface.operator.element.executeMethod.unifiedAttribute(this.getId(),obj,[a]);
-                                    }
-                                };
-                            }
-                            Object.entries({
-                                x: 0,
-                                y: 0,
-                                angle: 0,
-                                scale: 1,
-                                ignored: false,
-                            }).forEach(([name,defaultValue]) => this.__setupSimpleAttribute(name,defaultValue) );
-                            
-                            const __unifiedAttribute = function(attributes){
-                                if(attributes == undefined){ return cashedAttributes; }
-                                Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
-                                if(id != undefined){
-                                    interface.operator.element.executeMethod.unifiedAttribute(
-                                        id,
-                                        attributes,
-                                        transferableAttributes.map(name => attributes[name]).filter(item => item != undefined)
-                                    );
-                                }
-                            };
-                            this.unifiedAttribute = function(attributes){ return __unifiedAttribute(attributes); };
-                    
-                        //callbacks
-                            const cashedCallbacks = {};
-                            this.getCallback = function(callbackType){
-                                dev.log.elementLibrary[type]('['+self.getAddress()+'].getCallback(',callbackType); //#development
-                                return cashedCallbacks[callbackType];
-                            };
-                            this.attachCallback = function(callbackType, callback){
-                                dev.log.elementLibrary[type]('['+this.getAddress()+'].attachCallback(',callbackType,callback); //#development
-                                cashedCallbacks[callbackType] = callback;
-                                if(id != undefined){
-                                    interface.operator.callback.attachCallback(this, callbackType, callback);
-                                }
-                            }
-                            this.removeCallback = function(callbackType){
-                                dev.log.elementLibrary[type]('['+this.getAddress()+'].removeCallback(',callbackType); //#development
-                                delete cashedCallbacks[callbackType];
-                                if(id != undefined){ 
-                                    interface.operator.callback.removeCallback(this, callbackType);
-                                }
-                            }
-                    
-                        //info dump
-                            this._dump = function(){
-                                if(id != undefined){
-                                    interface.operator.element.executeMethod.dump(id);
-                                }
-                            };
-                    };
-                    
-                    this.Group = function(_name){
-                        genericElement.call(this,'Group',_name);
-                    
-                        Object.entries({
-                            heedCamera: false,
-                            heedCameraActive: false,
-                            clipActive: false,
-                            framebufferActive: false,
-                        }).forEach(([name,defaultValue]) => this.__setupSimpleAttribute(name,defaultValue) );
-                    
-                        const self = this;
-                    
-                        let children = [];
-                        let childRegistry = {};
-                        let stencilElement = undefined;
-                    
-                        function checkForName(name){ return childRegistry[name] != undefined; }
-                        function isValidElement(elementToCheck){
-                            if( elementToCheck == undefined ){ return false; }
-                            if( elementToCheck.getName() == undefined || elementToCheck.getName().length == 0 ){
-                                console.error('group error: element with no name being inserted into group "'+self.getAddress()+'", therefore; the element will not be added');
-                                return false;
-                            }
-                            if( checkForName(elementToCheck.getName()) ){
-                                console.error('group error: element with name "'+elementToCheck.getName()+'" already exists in group "'+self.getAddress()+'", therefore; the element will not be added');
-                                return false;
-                            }
-                    
-                            return true;
-                        }
-                    
-                        this.__repush = function(){
-                            dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].__repush()'); //#development
-                    
-                            dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].__repush -> pushing unifiedAttribute'); //#development
-                            self.unifiedAttribute(self.unifiedAttribute());
-                    
-                            if(stencilElement != undefined){
-                                function readdStencil(){
-                                    if( stencilElement.getId() == undefined ){ 
-                                        setTimeout(readdStencil,1);
-                                    } else{ 
-                                        dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].__repush -> pushing stencil'); //#development
-                                        interface.operator.element.executeMethod.Group.stencil(self.getId(),stencilElement.getId());
-                                    }
-                                }
-                                readdStencil();
-                            }
-                    
-                            function readdChildren(){
-                                const childIds = children.map(child => child.getId());
-                                if( childIds.indexOf(-1) != -1 ){ 
-                                    setTimeout(readdChildren,1);
-                                }else{
-                                    dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].__repush -> pushing children'); //#development
-                                    interface.operator.element.executeMethod.Group.replaceWithTheseChildren(self.getId(),childIds.filter(id => id!=undefined));
-                                }
-                            }
-                            readdChildren();
-                        };
-                    
-                        this.getChildren = function(){ 
-                            return children;
-                        };
-                        this.getChildByName = function(name){
-                            return childRegistry[name];
-                        };
-                        this.getChildIndexByName = function(name){
-                            return children.indexOf(childRegistry[name]);
-                        };
-                        this.contains = function(elementToCheck){
-                            return children.indexOf(elementToCheck) != -1;
-                        };
-                        
-                        this.prepend = function(newElement){
-                            dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].prepend(',newElement,'(',newElement.getName(),')'); //#development
-                    
-                            if( !isValidElement(newElement) ){ return false; }
-                    
-                            //don't add an element twice
-                                if( children.includes(newElement) ){ return; }
-                    
-                            //add element
-                                newElement.parent = this;
-                                children.push(newElement);
-                                childRegistry[newElement.getName()] = newElement;
-                                if(newElement.getCallback('onadd')){ newElement.getCallback('onadd')(); }
-                    
-                            //perform addition callback
-                                // if(newElement.getCallback('onadd')){newElement.getCallback('onadd')();}
-                    
-                            //communicate with engine for addition
-                                if(newElement.getId() == undefined){
-                                    dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].prepend -> newElement\'s id missing; setting up "__onIdReceived" callback..'); //#development
-                                    newElement.__calledBy = self.getAddress();
-                                    newElement.__onIdReceived = function(){
-                                        dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].prepend -> newElement\'s "__onIdReceived" callback, called by '+newElement.__calledBy+', id is: '+newElement.getId()+' ()'); //#development
-                                        if(self.getId() != undefined){ 
-                                            dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].prepend -> this group\'s id:',self.getId()); //#development
-                                            if(children.indexOf(newElement) != -1){
-                                                dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].prepend -> element position:',children.indexOf(newElement)); //#development
-                                                interface.operator.element.executeMethod.Group.prepend(self.getId(), newElement.getId());
-                                            }else{
-                                                dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].prepend -> this element doesn\'t seem to be relevant anymore; not sending message'); //#development
-                                            }
-                                        }else{
-                                            dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].prepend -> this group\'s id missing; will not send message'); //#development
-                                        }
-                                    };
-                                }else{
-                                    dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].prepend -> newElement\'s id present'); //#development
-                                    if(self.getId() != undefined){
-                                        dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].prepend -> group\'s id present, pushing prepend through...'); //#development
-                                        interface.operator.element.executeMethod.Group.prepend(self.getId(), newElement.getId());
-                                    }else{
-                                        dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].prepend -> this group\'s id missing; will not send message'); //#development
-                                    }
-                                }
-                        };
-                        this.append = function(newElement){
-                            dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].append(',newElement,'(',newElement.getName(),')'); //#development
-                    
-                            if( !isValidElement(newElement) ){ return false; }
-                    
-                            //don't add an element twice
-                                if( children.includes(newElement) ){ return; }
-                    
-                            //add element
-                                newElement.parent = this;
-                                children.push(newElement);
-                                childRegistry[newElement.getName()] = newElement;
-                                if(newElement.getCallback('onadd')){ newElement.getCallback('onadd')();}
-                    
-                            //perform addition callback
-                                // if(newElement.getCallback('onadd')){newElement.getCallback('onadd')();}
-                    
-                            //communicate with engine for addition
-                                if(newElement.getId() == undefined){
-                                    dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].append -> newElement\'s id missing; setting up "__onIdReceived" callback..'); //#development
-                                    newElement.__calledBy = self.getAddress();
-                                    newElement.__onIdReceived = function(){
-                                        dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].append -> newElement\'s "__onIdReceived" callback, called by '+newElement.__calledBy+', id is: '+newElement.getId()+' ()'); //#development
-                                        if(self.getId() != undefined){ 
-                                            dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].append -> this group\'s id:',self.getId()); //#development
-                                            if(children.indexOf(newElement) != -1){
-                                                dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].append -> element position:',children.indexOf(newElement)); //#development
-                                                interface.operator.element.executeMethod.Group.append(self.getId(), newElement.getId());
-                                            }else{
-                                                dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].append -> this element doesn\'t seem to be relevant anymore; not sending message'); //#development
-                                            }
-                                        }else{
-                                            dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].append -> this group\'s id missing; will not send message'); //#development
-                                        }
-                                    };
-                                }else{
-                                    dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].append -> newElement\'s id present'); //#development
-                                    if(self.getId() != undefined){
-                                        dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].append -> group\'s id present, pushing append through...'); //#development
-                                        interface.operator.element.executeMethod.Group.append(self.getId(), newElement.getId());
-                                    }else{
-                                        dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].append -> this group\'s id missing; will not send message'); //#development
-                                    }
-                                }
-                        };
-                        this.remove = function(elementToRemove){
-                            dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].remove(',elementToRemove,'(',elementToRemove.getName(),')'); //#development
-                    
-                            //ensure that removing element is actually a child of this group
-                                if( !children.includes(elementToRemove) ){ return; }
-                    
-                            //clear out children of removing element (if it is a group)
-                                if(elementToRemove.getType() == 'Group'){ elementToRemove.clear(); }
-                            
-                            //perform removal callback
-                                if(elementToRemove.getCallback('onremove')){ elementToRemove.getCallback('onremove')(); }
-                    
-                            //remove element
-                                children.splice(children.indexOf(elementToRemove), 1);
-                                delete childRegistry[elementToRemove.getName()];
-                                elementToRemove.parent = undefined;
-                    
-                            //communicate with engine for removal
-                                if(elementToRemove.getId() == undefined){
-                                    dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].remove -> elementToRemove\'s id is missing, setting up __onIdReceived callback...'); //#development
-                                    elementToRemove.__onIdReceived = function(){
-                                        dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].remove -> elementToRemove\'s "__onIdReceived" callback ->'); //#development
-                                        if(children.indexOf(elementToRemove) == -1){ 
-                                            dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].remove -> element is not in the proxy group, pushing remove through...'); //#development
-                                            interface.operator.element.executeMethod.Group.remove(self.getId(), elementToRemove.getId());
-                                        }else{
-                                            dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].remove -> element is still in the group; will not send message'); //#development
-                                        }
-                                    };
-                                }else{
-                                    dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].remove -> elementToRemove\'s id:',elementToRemove.getId()); //#development
-                                    if(self.getId() != undefined){
-                                        dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].remove -> group\'s id present, pushing remove through...'); //#development
-                                        interface.operator.element.executeMethod.Group.remove(self.getId(), elementToRemove.getId());
-                                    }else{
-                                        dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].remove -> this group\'s id missing; will not send message'); //#development
-                                    }
-                                }
-                        };
-                        this.clear = function(){
-                            dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].clear()'); //#development
-                            children.forEach(child => {if(child.getCallback('onremove')){ child.getCallback('onremove')(); }});
-                            children = [];
-                            childRegistry = {};
-                            if(self.getId() != undefined){ 
-                                dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].clear -> this group\'s id is present; setting lock and sending message...'); //#development
-                                interface.operator.element.executeMethod.Group.clear(self.getId());
-                            }else{
-                                dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].clear -> this group\'s id is missing; will not send message'); //#development
-                            }
-                        };
-                        this.shift = function(elementToShift,newPosition){
-                            dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].shift(',elementToShift,newPosition); //#development
-                    
-                            //ensure that moving element is actually a child of this group
-                                if( !children.includes(elementToShift) ){ return; }
-                    
-                            //shift element
-                                children.splice(children.indexOf(elementToShift), 1);
-                                children.splice(newPosition,0,elementToShift);
-                    
-                            //perform shift callback
-                                if(elementToShift.getCallback('onshift')){elementToShift.getCallback('onshift')(children.indexOf(elementToShift));}
-                    
-                            //communicate with engine for shift
-                                if(elementToShift.getId() == undefined){
-                                    dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].shift -> elementToShift\'s id missing, setting up replacement "__onIdReceived" callback'); //#development
-                                    elementToShift.__onIdReceived = function(){
-                                        dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].shift -> elementToShift\'s "__onIdReceived" callback ->'); //#development
-                                        if(self.getId() != undefined){ 
-                                            dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].shift -> this group\'s id:',self.getId()); //#development
-                                            if(children.indexOf(elementToShift) != -1){
-                                                dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].shift -> element position:',children.indexOf(elementToShift)); //#development
-                                                interface.operator.element.executeMethod.Group.replaceWithTheseChildren(self.getId(),children.map(child => child.getId()).filter(id => id!=undefined) );
-                                            }else{
-                                                dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].shift -> this element doesn\'t seem to be relevant anymore; not sending message'); //#development
-                                            }
-                                        }else{
-                                            dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].shift -> this group\'s id missing; will not send message'); //#development
-                                        }
-                                    };
-                                }else{
-                                    dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].shift -> elementToShift\'s id:',elementToShift.getId()); //#development
-                                    if(self.getId() != undefined){
-                                        interface.operator.element.executeMethod.Group.shift(self.getId(), elementToShift.getId(), newPosition);
-                                    }else{
-                                        dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].shift -> this group\'s id missing; will not send message'); //#development
-                                    }
-                                }
-                        };
-                    
-                        this.getElementsUnderPoint = function(x,y){
-                            dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].getElementsUnderPoint(',x,y); //#development
-                            if(self.getId() != undefined){
-                                return interface.operator.element.executeMethod.Group.getElementsUnderPoint(self.getId(),x,y);
-                            }
-                        };
-                    
-                        this.stencil = function(newStencilElement){
-                            if(newStencilElement == undefined){ return stencilElement; }
-                            dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].stencil(',newStencilElement); //#development
-                    
-                            if( !isValidElement(newStencilElement) ){ return false; }
-                    
-                            stencilElement = newStencilElement;
-                    
-                            if(newStencilElement.getId() == undefined){
-                                dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].stencil -> newStencilElement\'s id missing; setting up "__onIdReceived" callback..'); //#development
-                                newStencilElement.__onIdReceived = function(){
-                                    dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].stencil -> newStencilElement\'s "__onIdReceived" callback, called by '+newStencilElement.__calledBy+', id is: '+newStencilElement.getId()+' ()'); //#development
-                                    if(self.getId() != undefined){
-                                        dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].stencil -> sending message...:'); //#development
-                                        interface.operator.element.executeMethod.Group.stencil(self.getId(), newStencilElement.getId());
-                                    }
-                                };
-                            }else{
-                                if(self.getId() != undefined){
-                                    dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].stencil -> sending message...:'); //#development
-                                    interface.operator.element.executeMethod.Group.stencil(self.getId(), newStencilElement.getId());
-                                }else{
-                                    dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].stencil -> this group\'s id missing; will not send message'); //#development
-                                }
-                            }
-                        };
-                    };
-                    this.Rectangle = function(_name){
-                        genericElement.call(this,'Rectangle',_name);
-                    
-                        Object.entries({
-                            colour: {r:1,g:0,b:0,a:1},
-                            anchor: {x:0,y:0},
-                            width: 10,
-                            height: 10,
-                        }).forEach(([name,defaultValue]) => this.__setupSimpleAttribute(name,defaultValue) );
-                    };
-                    this.RectangleWithOutline = function(_name){
-                        genericElement.call(this,'RectangleWithOutline',_name);
-                    
-                        Object.entries({
-                            colour: {r:1,g:0,b:0,a:1},
-                            lineColour: {r:1,g:0,b:0,a:1},
-                            anchor: {x:0,y:0},
-                            width: 10,
-                            height: 10,
-                            thickness: 0,
-                        }).forEach(([name,defaultValue]) => this.__setupSimpleAttribute(name,defaultValue) );
-                    };
-                    this.Circle = function(_name){
-                        genericElement.call(this,'Circle',_name);
-                    
-                        Object.entries({
-                            colour: {r:1,g:0,b:0,a:1},
-                            radius: 10,
-                            detail: 25,
-                        }).forEach(([name,defaultValue]) => this.__setupSimpleAttribute(name,defaultValue) );
-                    };
-                    this.CircleWithOutline = function(_name){
-                        genericElement.call(this,'CircleWithOutline',_name);
-                    
-                        Object.entries({
-                            colour: {r:1,g:0,b:0,a:1},
-                            lineColour: {r:1,g:0,b:0,a:1},
-                            radius: 10,
-                            detail: 25,
-                            thickness: 0,
-                        }).forEach(([name,defaultValue]) => this.__setupSimpleAttribute(name,defaultValue) );
-                    };
-                    this.Polygon = function(_name){
-                        genericElement.call(this,'Polygon',_name);
-                    
-                        Object.entries({
-                            colour: {r:1,g:0,b:0,a:1},
-                            points: [], 
-                        }).forEach(([name,defaultValue]) => this.__setupSimpleAttribute(name,defaultValue) );
-                    
-                        function XYArrayToPoints(XYArray){
-                            return XYArray.flatMap(i => [i.x,i.y]);
-                        }
-                        function pointsToXYArray(points){ 
-                            const output = [];
-                            for(let a = 0; a < points.length; a+=2){ output.push({x:points[a], y:points[a+1]}); }
-                            return output;
-                        }
-                    
-                        this.pointsAsXYArray = function(XYArray){
-                            if(XYArray == undefined){ return pointsToXYArray(this.points()); }
-                            this.points(XYArrayToPoints(XYArray));
-                        };
-                    
-                        const __unifiedAttribute = this.unifiedAttribute;
-                        this.unifiedAttribute = function(attributes){
-                            if(attributes == undefined){ return __unifiedAttribute(); }
-                            if(attributes.points != undefined){
-                                attributes.pointsAsXYArray = pointsToXYArray(attributes.points);
-                            }
-                            if(attributes.pointsAsXYArray != undefined){
-                                attributes.points = XYArrayToPoints(attributes.pointsAsXYArray);
-                            }
-                            __unifiedAttribute(attributes);
-                        };
-                    };
-                    this.PolygonWithOutline = function(_name){
-                        genericElement.call(this,'PolygonWithOutline',_name);
-                    
-                        Object.entries({
-                            colour: {r:1,g:0,b:0,a:1},
-                            lineColour: {r:1,g:0,b:0,a:1},
-                            points: [],
-                            thickness: 0,
-                            jointDetail: 25,
-                            jointType: 'sharp',
-                            sharpLimit: 4,
-                        }).forEach(([name,defaultValue]) => this.__setupSimpleAttribute(name,defaultValue) );
-                    
-                        function XYArrayToPoints(XYArrray){
-                            return XYArrray.flatMap(i => [i.x,i.y]);
-                        }
-                        function pointsToXYArray(points){ 
-                            const output = [];
-                            for(let a = 0; a < points.length; a+=2){ output.push({x:points[a], y:points[a+1]}); }
-                            return output;
-                        }
-                    
-                        this.pointsAsXYArray = function(XYArrray){
-                            if(XYArrray == undefined){ return pointsToXYArray(this.points()); }
-                            this.points(XYArrayToPoints(XYArrray));
-                        };
-                    
-                        const __unifiedAttribute = this.unifiedAttribute;
-                        this.unifiedAttribute = function(attributes){
-                            if(attributes == undefined){ return __unifiedAttribute(); }
-                            if(attributes.points != undefined){
-                                attributes.pointsAsXYArray = pointsToXYArray(attributes.points);
-                            }
-                            if(attributes.pointsAsXYArray != undefined){
-                                attributes.points = XYArrayToPoints(attributes.pointsAsXYArray);
-                            }
-                            __unifiedAttribute(attributes);
-                        };
-                    };
-                    this.Path = function(_name){
-                        genericElement.call(this,'Path',_name);
-                    
-                        Object.entries({
-                            colour: {r:1,g:0,b:0,a:1},
-                            points: [], 
-                            thickness: 0,
-                            capType: 'none',
-                            jointDetail: 25,
-                            jointType: 'sharp',
-                            sharpLimit: 4,
-                            loop: false,
-                        }).forEach(([name,defaultValue]) => this.__setupSimpleAttribute(name,defaultValue) );
-                    
-                        function XYArrayToPoints(XYArrray){
-                            return XYArrray.flatMap(i => [i.x,i.y]);
-                        }
-                        function pointsToXYArray(points){ 
-                            const output = [];
-                            for(let a = 0; a < points.length; a+=2){ output.push({x:points[a], y:points[a+1]}); }
-                            return output;
-                        }
-                    
-                        this.pointsAsXYArray = function(XYArrray){
-                            if(XYArrray == undefined){ return pointsToXYArray(this.points()); }
-                            this.points(XYArrayToPoints(XYArrray));
-                        };
-                    
-                        const __unifiedAttribute = this.unifiedAttribute;
-                        this.unifiedAttribute = function(attributes){
-                            if(attributes == undefined){ return __unifiedAttribute(); }
-                            if(attributes.points != undefined){
-                                attributes.pointsAsXYArray = pointsToXYArray(attributes.points);
-                            }
-                            if(attributes.pointsAsXYArray != undefined){
-                                attributes.points = XYArrayToPoints(attributes.pointsAsXYArray);
-                            }
-                            __unifiedAttribute(attributes);
-                        };
-                    };
-                    this.Image = function(_name){
-                        genericElement.call(this,'Image',_name);
-                    
-                        Object.entries({
-                            x: 0,
-                            y: 0,
-                            angle: 0,
-                            anchor: {x:0,y:0},
-                            width: 10,
-                            height: 10,
-                            url:undefined,
-                        }).forEach(([name,defaultValue]) => this.__setupSimpleAttribute(name,defaultValue) );
-                    
-                        Object.entries({
-                            bitmap: undefined,
-                        }).forEach(([name,defaultValue]) => this.__setupTransferableAttribute(name,defaultValue) );
-                    };
-                    this.Canvas = function(_name){
-                        genericElement.call(this,'Canvas',_name);
-                    
-                        Object.entries({
-                            x: 0,
-                            y: 0,
-                            angle: 0,
-                            anchor: {x:0,y:0},
-                            width: 10,
-                            height: 10,
-                        }).forEach(([name,defaultValue]) => this.__setupSimpleAttribute(name,defaultValue) );
-                    
-                        //subCanvas
-                            const subCanvas = { object:document.createElement('canvas'), context:undefined, resolution:1 };
-                            subCanvas.context = subCanvas.object.getContext('2d');
-                    
-                            function updateDimensions(self){
-                                subCanvas.object.setAttribute('width',self.width()*subCanvas.resolution);
-                                subCanvas.object.setAttribute('height',self.height()*subCanvas.resolution);
-                            }
-                            updateDimensions(this);
-                    
-                            this._ = subCanvas.context;
-                            this.$ = function(a){return a*subCanvas.resolution;};
-                            this.resolution = function(a){
-                                if(a == undefined){return subCanvas.resolution;}
-                                subCanvas.resolution = a;
-                                updateDimensions(this);
-                            };
-                            this.requestUpdate = function(){
-                                if(this.getId() != undefined){
-                                    createImageBitmap(subCanvas.object).then(bitmap => {
-                                        interface.operator.element.executeMethod.unifiedAttribute(this.getId(),{bitmap:bitmap},[bitmap]);
-                                    });
-                                }
-                            };
-                            this.requestUpdate();
-                            this.__repush = function(){ this.requestUpdate(); };
-                    
-                        const __unifiedAttribute = this.unifiedAttribute;
-                        this.unifiedAttribute = function(attributes){
-                            if(attributes == undefined){ return __unifiedAttribute(); }
-                            if(attributes.resolution != undefined){
-                                this.resolution(attributes.resolution);
-                                delete attributes.resolution;
-                            }
-                            __unifiedAttribute(attributes);
-                            updateDimensions(this);
-                        };
-                    };
-                    this.Character = function(_name){
-                        genericElement.call(this,'Character',_name);
-                    
-                        Object.entries({
-                            colour: {r:1,g:0,b:0,a:1},
-                            x: 0,
-                            y: 0,
-                            angle: 0,
-                            anchor: {x:0,y:0},
-                            width: 10,
-                            height: 10,
-                            font: 'defaultThin',
-                            character: '',
-                            printingMode: { horizontal:'left', vertical:'bottom' },
-                        }).forEach(([name,defaultValue]) => this.__setupSimpleAttribute(name,defaultValue) );
-                    };
-                    this.CharacterString = function(_name){
-                        genericElement.call(this,'CharacterString',_name);
-                    
-                        Object.entries({
-                            colour: {r:1,g:0,b:0,a:1},
-                            x: 0,
-                            y: 0,
-                            angle: 0,
-                            width: 10,
-                            height: 10,
-                            font: 'defaultThin',
-                            string: '',
-                            spacing: 0.5,
-                            interCharacterSpacing: 0,
-                            printingMode: { widthCalculation:'absolute', horizontal:'left', vertical:'bottom' },
-                        }).forEach(([name,defaultValue]) => this.__setupSimpleAttribute(name,defaultValue) );
-                    
-                        const cashedAttributes_presentationOnly = {
-                            resultingWidth: 0, 
-                        };
-                        const cashedCallbacks_elementSpecific = {
-                            onFontUpdateCallback:function(){},
-                        };
-                        this.__updateValues = function(data){
-                            Object.keys(data).forEach(key => { cashedAttributes_presentationOnly[key] = data[key]; });
-                        };
-                        this.__runCallback = function(data){
-                            Object.entries(data).forEach(([name,values]) => {
-                                if(name in cashedCallbacks_elementSpecific){ cashedCallbacks_elementSpecific[name](values); }
-                            });
-                        };
-                        this.resultingWidth = function(){
-                            return cashedAttributes_presentationOnly.resultingWidth;
-                        };
-                    
-                        const __getCallback = this.getCallback;
-                        this.getCallback = function(callbackType){
-                            if(callbackType in cashedCallbacks_elementSpecific){
-                                return cashedCallbacks_elementSpecific[callbackType];
-                            }
-                            __getCallback(callbackType);
-                        };
-                        const __attachCallback = this.attachCallback;
-                        this.attachCallback = function(callbackType, callback){
-                            if(callbackType in cashedCallbacks_elementSpecific){
-                                cashedCallbacks_elementSpecific[callbackType] = callback;
-                                return;
-                            }
-                            __attachCallback(callbackType);
-                        }
-                        const __removeCallback = this.removeCallback;
-                        this.removeCallback = function(callbackType){
-                            if(callbackType in cashedCallbacks_elementSpecific){
-                                delete cashedCallbacks_elementSpecific[callbackType];
-                                return;
-                            }
-                            __removeCallback(callbackType);
-                        }
-                    };
-                };
-                const elementRegistry = [];
-                
-                //element library
-                    this.getAvailableElements = function(){
-                        return Object.keys(elementLibrary);
-                    };
-                    this.getElementById = function(id){
-                        return elementRegistry[id];
-                    };
-                //basic management
-                    this.__createLocalWithId = function(type,name,id){
-                        if( type == undefined || name == undefined || id == undefined ){
-                            console.error("core.element.__createLocalWithId(",type,name,id);
-                            console.error("missing arguments");
-                            return;
-                        }
-                        if( elementRegistry[id] != undefined ){
-                            console.error("core.element.__createLocalWithId(",type,name,id);
-                            console.error("proxy already present");
-                            return;
-                        }
-            
-                        elementRegistry[id] = new elementLibrary[type](name);
-                        elementRegistry[id].__id(id);
-                        return elementRegistry[id];
-                    };
-                    this.create = function(type,name){
-                        if( ! (type in elementLibrary) ){
-                            console.error("core.element.create -> element type: \""+type+"\" is not a known type");
-                            return;
-                        }
-            
-                        const newElementProxy = new elementLibrary[type](name);
-                        interface.operator.element.create(type,name).then(id => {
-                                newElementProxy.__id(id);
-                                elementRegistry[id] = newElementProxy;
-                            }
-                        );
-                        return newElementProxy;
-                    };
-                    this.delete = function(element){
-                        interface.operator.element.delete(element.getId());
-                        elementRegistry[element.getId()] = undefined;
-                    };
-                    this.deleteAllCreated = function(){
-                        interface.operator.element.deleteAllCreated();
-                        elementRegistry = [];
-                    };
-                //misc
-                    this._dump = function(){
-                        console.log("┌─Console Element Dump─");
-                        console.log("│ elementRegistry:", elementRegistry);
-                        console.log("└──────────────────────");
-                        interface.operator.element._dump();
-                    };
-            };
-            this.arrangement = new function(){
-                const design = core.element.__createLocalWithId('Group','root',0);
-            
-                //root
-                    this.prepend = function(element){
-                        return design.prepend(element);
-                    };
-                    this.append = function(element){
-                        return design.append(element);
-                    };
-                    this.remove = function(element){
-                        return design.remove(element);
-                    };
-                    this.clear = function(){
-                        return design.clear();
-                    };
-                    this.shift = function(element, newPosition){
-                        return design.shift(element, newPosition);
-                    };
-            
-                //discovery
-                    this.getElementByAddress = function(address,local=true){
-                        if(local){
-                            const route = address.split('/');
-                            route.shift();
-                            route.shift();
-                    
-                            let currentObject = design;
-                            route.forEach((a) => {
-                                currentObject = currentObject.getChildByName(a);
-                            });
-                    
-                            return currentObject;
-                        }else{
-                            return new Promise((resolve, reject) => {
-                                interface.operator.arrangement.getElementByAddress(address).then(id => {
-                                    resolve(core.element.getElementById(id));
-                                });
-                            });
-                        }
-            
-                    };
-                    this.getElementsUnderPoint = function(x,y){
-                        return new Promise((resolve, reject) => {
-                            interface.operator.arrangement.getElementsUnderPoint(x,y).then(ids => {
-                                const output = [];
-                                for(let a = 0; a < ids.length; a++){
-                                    output.push( core.element.getElementById(ids[a]) );
-                                }
-                                resolve(output);
-                            });
-                        });
-                    };
-                    this.getElementsUnderArea = function(points){
-                        return new Promise((resolve, reject) => {
-                            interface.operator.arrangement.getElementsUnderArea(points).then(ids => {
-                                const output = [];
-                                for(let a = 0; a < ids.length; a++){
-                                    output.push( core.element.getElementById(ids[a]) );
-                                }
-                                resolve(output);
-                            });
-                        });
-                    };
-            
-                //misc
-                    this.printTree = function(mode='spaced',local=false){
-                        if(local){               
-                            function format(element, prefix='', mode='spaced'){
-                                const data = '(id:'+element.getId() + ', type:'+element.getType() + ', x:'+element.x()+ ', y:'+element.y()+ ', angle:'+element.angle()+ ', scale:'+element.scale() + ')';
-                                if(mode == 'spaced'){
-                                    return prefix+element.getName()+' '+data;
-                                }else if(mode == 'tabular'){
-                                    return prefix+element.getName()+' '+data;
-                                }else if(mode == 'address'){
-                                    return prefix+'/'+element.getName()+' '+data;
-                                }
-                            }
-                            function recursivePrint(group, prefix='', mode='spaced'){
-                                console.log( format(group, prefix, mode) );
-            
-                                let new_prefix = '';
-                                if(mode == 'spaced'){
-                                    new_prefix = prefix+'- ';
-                                }else if(mode == 'tabular'){
-                                    new_prefix = prefix+'-\t';
-                                }else if(mode == 'address'){
-                                    new_prefix = prefix+'/'+group.getName();
-                                }
-            
-                                group.getChildren().forEach(element => {
-                                    if(element.getType() == 'Group'){
-                                        recursivePrint(element, new_prefix, mode)
-                                    } else {
-                                        console.log( format(element, new_prefix, mode) );
-                                    }
-                                });
-                            }
-                            recursivePrint(design, undefined, mode);
-                        } else {
-                            interface.operator.arrangement.printTree(mode);
-                        }
-                    };
-                    this.printSurvey = function(local=false){
-                        if(local){
-                            
-                        } else {
-                            interface.operator.arrangement.printSurvey();
-                        }
-                    };
-                    this._dump = function(){
-                        interface.operator.arrangement._dump();
-                    };
-            };
-            this.render = new function(){
-                const cachedValues = {
-                    clearColour:{r:1,g:1,b:1,a:1},
-                    activeLimitToFrameRate:false,
-                    frameRateLimit:30,
-                    active:false,
-                    allowFrameSkipping:true,
-                };
-            
-                //canvas and webGL context
-                    this.clearColour = function(colour){
-                        dev.log.render('.clearColour(',colour); //#development
-                        if(colour == undefined){ return cachedValues.clearColour; }
-                        cachedValues.clearColour = colour;
-                        interface.operator.render.clearColour(colour);
-                    };
-                    this.getCanvasSize = function(){
-                        dev.log.render('.getCanvasSize()'); //#development
-                        return interface.operator.render.getCanvasSize();
-                    };
-                    this.adjustCanvasSize = function(newWidth, newHeight){
-                        dev.log.render('.adjustCanvasSize(',newWidth,newHeight); //#development
-                        interface.operator.render.adjustCanvasSize(newWidth, newHeight);
-                    };
-                    this.refreshCoordinates = function(){
-                        dev.log.render('.refreshCoordinates()'); //#development
-                        interface.operator.render.refreshCoordinates();
-                    };
-                    this.refresh = function(){
-                        dev.log.render('.refresh()'); //#development
-                        interface.operator.render.refresh();
-                    };
-            
-                //frame rate control
-                    this.activeLimitToFrameRate = function(a){
-                        dev.log.render('.activeLimitToFrameRate(',a); //#development
-                        if(a == undefined){ return cachedValues.activeLimitToFrameRate; }
-                        cachedValues.activeLimitToFrameRate = a;
-                        interface.operator.render.activeLimitToFrameRate(a);
-                    };
-                    this.frameRateLimit = function(a){
-                        dev.log.render('.frameRateLimit(',a); //#development
-                        if(a == undefined){ return cachedValues.frameRateLimit; }
-                        cachedValues.frameRateLimit = a;
-                        interface.operator.render.frameRateLimit(a);
-                    };
-                    this.allowFrameSkipping = function(a){
-                        dev.log.render('.allowFrameSkipping(',a); //#development
-                        if(a == undefined){ return cachedValues.allowFrameSkipping; }
-                        cachedValues.allowFrameSkipping = a;
-                        interface.operator.render.allowFrameSkipping(a);
-                    };
-            
-                //actual render
-                    this.frame = function(noClear=false){
-                        dev.log.render('.frame(',noClear); //#development
-                        interface.operator.render.frame(noClear);
-                    };
-                    this.active = function(bool){
-                        dev.log.render('.active(',bool); //#development
-                        if(bool == undefined){ return cachedValues.active; }
-                        cachedValues.active = bool;
-                        interface.operator.render.active(bool);
-                    };
-            
-                //misc
-                    this.drawDot = function(x,y,r=2,colour={r:1,g:0,b:0,a:1}){
-                        dev.log.render('.drawDot(',x,y,r,colour); //#development
-                        interface.operator.render.drawDot(x,y,r,colour);
-                    };
-                    this._dump = function(){
-                        dev.log.render('._dump()'); //#development
-                        interface.operator.render._dump();
-                    };
-            };
-            this.viewport = new function(){
-                const cachedValues = {
-                    position:{x:0,y:0},
-                    scale:1,
-                    angle:0,
-                    anchor:{x:0,y:0},
-                    stopMouseScroll:false,
-                };
-                //adapter
-                    this.adapter = new function(){
-                        this.windowPoint2workspacePoint = function(x,y){
-                            dev.log.interface('.viewport.adapter.windowPoint2workspacePoint(',x,y); //#development
-                            const position = cachedValues.position;
-                            const scale = cachedValues.scale;
-                            const angle = cachedValues.angle;
-            
-                            let tmp = {x:x, y:y};
-                            tmp = _canvas_.library.math.cartesianAngleAdjust(tmp.x,tmp.y,-angle);
-                            tmp.x = tmp.x/scale + position.x;
-                            tmp.y = tmp.y/scale + position.y;
-            
-                            return tmp;
-                        };
-                    };
-                    
-                //camera position
-                    this.position = function(x,y){
-                        dev.log.viewport('.position(',x,y); //#development
-                        if(x == undefined || y == undefined){ return cachedValues.position; }
-                        cachedValues.position = {x:x,y:y};
-                        interface.operator.viewport.position(x,y);
-                    };
-                    this.scale = function(s){
-                        dev.log.viewport('.scale(',s); //#development
-                        if(s == undefined){ return cachedValues.scale; }
-                        if(s == 0){ console.error('cannot set scale to zero'); }
-                        cachedValues.scale = s;
-                        interface.operator.viewport.scale(s);
-                    };
-                    this.angle = function(a){
-                        dev.log.viewport('.angle(',a); //#development
-                        if(a == undefined){ return cachedValues.angle; }
-                        cachedValues.angle = a;
-                        interface.operator.viewport.angle(a);
-                    };
-                    this.anchor = function(x,y){
-                        dev.log.viewport('.anchor(',x,y); //#development
-                        if(x == undefined || y == undefined){ return cachedValues.anchor; }
-                        cachedValues.anchor = {x:x,y:y};
-                        interface.operator.viewport.anchor(x,y);
-                    };
-                    this.scaleAroundWindowPoint = function(s,x,y){
-                        dev.log.viewport('.scaleAroundWindowPoint(',s); //#development
-                        if(s == undefined || x == undefined || y == undefined){ return; }
-                        if(s == 0){ console.error('cannot set scale to zero'); }
-                        cachedValues.scale = s;
-                        interface.operator.viewport.scaleAroundWindowPoint(s,x,y).then(data => {
-                            cachedValues.position = {x:data[0],y:data[1]};
-                        });
-                    };
-                
-                //mouse interaction
-                    this.getElementsUnderPoint = function(x,y){
-                        dev.log.viewport('.getElementsUnderPoint(',x,y); //#development
-                        return new Promise((resolve, reject) => {
-                            interface.operator.viewport.getElementsUnderPoint(x,y).then(ids => {
-                                resolve(ids.map(id => self.element.getElementById(id)));
-                            });
-                        });
-                    };
-                    this.getElementsUnderArea = function(points){
-                        dev.log.viewport('.getElementsUnderArea(',points); //#development
-                        return new Promise((resolve, reject) => {
-                            interface.operator.viewport.getElementsUnderArea(points).then(ids => {
-                                resolve(ids.map(id => self.element.getElementById(id)));
-                            });
-                        });
-                    };
-                    // this.mousePosition = function(x,y){
-                    //     dev.log.viewport('.mousePosition(',x,y); //#development
-                    //     if(x == undefined || y == undefined){ return mouseData; }
-                    //     mouseData.x = x;
-                    //     mouseData.y = y;
-                    //     interface.operator.viewport.mousePosition(x,y);
-                    // };
-                    this.stopMouseScroll = function(bool){
-                        dev.log.viewport('.stopMouseScroll(',bool); //#development
-                        if(bool == undefined){ return cachedValues.stopMouseScroll; }
-                        cachedValues.stopMouseScroll = bool;
-                        interface.operator.viewport.stopMouseScroll(bool);
-                    };
-                
-                //misc
-                    this.refresh = function(){
-                        dev.log.viewport('.refresh()'); //#development
-                        interface.operator.viewport.refresh();
-                    };
-                    this.cursor = function(type){
-                        //cursor types: https://www.w3schools.com/csSref/tryit.asp?filename=trycss_cursor
-                        if(type == undefined){return document.body.style.cursor;}
-                        document.body.style.cursor = type;
-                    };
-                    this._dump = function(){
-                        dev.log.viewport('._dump()'); //#development
-                        interface.operator.viewport._dump();
-                    };
-            };
-            this.stats = new function(){
-                const cachedValues = {
-                    active:false,
-                };
-            
-                this.elementRenderDecision_clearData = function(){
-                    dev.log.stats('.elementRenderDecision_clearData()'); //#development
-                    interface.operator.stats.elementRenderDecision_clearData();
-                };
-            
-                this.active = function(active){
-                    dev.log.stats('.active(',active); //#development
-                    if(active == undefined){ return cachedValues.active; }
-                    cachedValues.active = active;
-                    interface.operator.stats.active(active);
-                };
-                this.getReport = function(){
-                    dev.log.stats('.getReport()'); //#development
-                    return interface.operator.stats.getReport();
-                };
-            
-            
-                let autoPrintActive = false;
-                let autoPrintIntervalId = undefined;
-                this.autoPrint = function(bool){
-                    dev.log.stats('.autoPrint(',bool); //#development
-                    if(bool == undefined){ return autoPrintActive; }
-                    autoPrintActive = bool;
-            
-                    if(autoPrintActive){
-                        autoPrintIntervalId = setInterval(() => {
-                            core.stats.getReport().then(console.log)
-                        }, 500);
-                    }else{
-                        clearInterval(autoPrintIntervalId);
-                    }
-                };
-                let autoPrintRenderDecisionReportActive = false;
-                let autoPrintRenderDecisionReportIntervalId = undefined;
-                this.autoPrintRenderDecisionReport = function(bool){
-                    dev.log.stats('.autoPrintRenderDecisionReport(',bool); //#development
-                    if(bool == undefined){ return autoPrintRenderDecisionReportActive; }
-                    autoPrintRenderDecisionReportActive = bool;
-            
-                    if(autoPrintRenderDecisionReportActive){
-                        autoPrintRenderDecisionReportIntervalId = setInterval(() => {
-                            core.stats.getReport().then(data => {
-                                Object.keys(data.renderDecision).sort().forEach(key => {
-                                    let printingString = key + ': ';
-                                    Object.keys(data.renderDecision[key]).sort().forEach((innerDataKey, index, array) => {
-                                        printingString += innerDataKey + ':' + data.renderDecision[key][innerDataKey].percentage;
-                                        if(index < array.length-1){ printingString += ' - '; }
-                                    });
-                                    console.log(printingString);
-                                });
-                                console.log('');
-                            })
-                        }, 500);
-                    }else{
-                        clearInterval(autoPrintRenderDecisionReportIntervalId);
-                    }
-            
-                };
-            
-                let onScreenAutoPrint_active = false;
-                let onScreenAutoPrint_intervalId = false;
-                let onScreenAutoPrint_section = undefined;
-                this.onScreenAutoPrint = function(bool){
-                    dev.log.stats('.onScreenAutoPrint(',bool); //#development
-                    if(bool == undefined){ return onScreenAutoPrint_active; }
-                    onScreenAutoPrint_active = bool;
-            
-                    core.stats.active(bool);
-            
-                    if(onScreenAutoPrint_active){
-                        onScreenAutoPrint_section = document.createElement('section');
-                            onScreenAutoPrint_section.style = 'position:fixed; z-index:1; margin:0; font-family:Helvetica;';
-                            document.body.prepend(onScreenAutoPrint_section);
-                            
-                        onScreenAutoPrint_intervalId = setInterval(() => {
-                            onScreenAutoPrint_section.style.top = (window.innerHeight-onScreenAutoPrint_section.offsetHeight)+'px';
-                            core.stats.getReport().then(data => {
-                                const position = core.viewport.position();
-                                const anchor = core.viewport.anchor();
-            
-                                const potentialFPS = data.secondsPerFrameOverTheLastThirtyFrames != 0 ? (1/data.secondsPerFrameOverTheLastThirtyFrames).toFixed(2) : 'infinite ';
-            
-                                onScreenAutoPrint_section.innerHTML = ''+
-                                    '<p style="margin:1px"> position: x:'+ position.x + ' y:' + position.y +'</p>' +
-                                    '<p style="margin:1px"> scale:'+ core.viewport.scale() +'</p>' +
-                                    '<p style="margin:1px"> angle:'+ core.viewport.angle()+'</p>' +
-                                    '<p style="margin:1px"> anchor: x:'+ anchor.x + ' y:' + anchor.y +'</p>' +
-                                    '<p style="margin:1px"> framesPerSecond: '+ data.framesPerSecond.toFixed(2) +'</p>' +
-                                    '<p style="margin:1px"> secondsPerFrameOverTheLastThirtyFrames: '+ data.secondsPerFrameOverTheLastThirtyFrames.toFixed(15) +' (potentially '+ potentialFPS +'fps)</p>' +
-                                    '<p style="margin:1px"> renderSplitOverTheLastThirtyFrames: '+ data.renderSplit+'</p>' +
-                                '';
-            
-                                onScreenAutoPrint_section.innerHTML += '<p style="margin:1px">render decision</p>';
-                                Object.keys(data.renderDecision).sort().forEach(key => {
-                                    let printingString = key + ': ';
-                                    Object.keys(data.renderDecision[key]).sort().forEach((innerDataKey, index, array) => {
-                                        printingString += innerDataKey + ':' + data.renderDecision[key][innerDataKey].percentage;
-                                        if(index < array.length-1){ printingString += ' - '; }
-                                    });
-                                    onScreenAutoPrint_section.innerHTML += '<p style="margin:1px"> - '+ printingString + '</p>';
-                                });
-                    
-                            });
-                        }, 250);
-                    }else{
-                        clearInterval(onScreenAutoPrint_intervalId);
-                        if(onScreenAutoPrint_section != undefined){ onScreenAutoPrint_section.remove(); }
-                        onScreenAutoPrint_section = undefined;
-                    }
-                };
-            
-                this._dump = function(){
-                    dev.log.callback('._dump()'); //#development
-                    interface.operator.stats._dump();
-                };
-            };
-            this.callback = new function(){
-                const mouseData = { 
-                    x:undefined, 
-                    y:undefined, 
-                };
-            
-                this.listCallbackTypes = function(){
-                    dev.log.callback('.listCallbackTypes()'); //#development
-                    return interface.operator.callback.listCallbackTypes();
-                };
-                this.listActivationModes = function(){
-                    dev.log.callback('.listActivationModes()'); //#development
-                    return interface.operator.callback.listActivationModes();
-                };
-            
-                const callbackRegistry = new function(){
-                    const registeredShapes = {};
-            
-                    this.getCallback = function(id,callbackType){
-                        if(id == undefined || registeredShapes[id] == undefined || registeredShapes[id][callbackType] == undefined){return;}
-                        return registeredShapes[id][callbackType];
-                    };
-                    this.register = function(id,callbackType,callback){
-                        if(!(id in registeredShapes)){ registeredShapes[id] = {}; }
-                        registeredShapes[id][callbackType] = callback;
-                    };
-                    this.remove = function(id,callbackType){
-                        registeredShapes[id][callbackType] = undefined;
-                        delete registeredShapes[id][callbackType];
-                    };
-                    this.call = function(id,callbackType,x,y,event){
-                        if(id == undefined || registeredShapes[id] == undefined || registeredShapes[id][callbackType] == undefined){return false;}
-                        registeredShapes[id][callbackType](x,y,event);
-                        return true;
-                    };
-                };
-                this.getCallback = function(element, callbackType){
-                    dev.log.callback('.getCallback(',element,callbackType); //#development
-                    callbackRegistry.getCallback(element.getId(), callbackType);
-                };
-                this.attachCallback = function(element, callbackType, callback){
-                    dev.log.callback('.attachCallback(',element,callbackType,callback); //#development
-                    callbackRegistry.register(element.getId(), callbackType, callback);
-                    interface.operator.callback.attachCallback(element.getId(),callbackType);
-                };
-                this.removeCallback = function(element, callbackType){
-                    dev.log.callback('.removeCallback(',element,callbackType); //#development
-                    callbackRegistry.remove(element.getId(), callbackType);
-                    interface.operator.callback.removeCallback(element.getId(),callbackType);
-                };
-            
-                let callbackActivationMode = 'firstMatch'; //topMostOnly / firstMatch / allMatches
-                this.callbackActivationMode = function(mode){
-                    if(mode == undefined){return callbackActivationMode;}
-                    dev.log.callback('.callbackActivationMode(',mode); //#development
-                    callbackActivationMode = mode;
-                    return interface.operator.callback.callbackActivationMode(callbackActivationMode);
-                };
-            
-                this.functions = {};
-                this.__attachCallbacks = function(){
-                    return new Promise((resolve, reject) => {
-                        this.listCallbackTypes().then(callbackNames => {
-                            dev.log.callback(' setting up outgoing message callbacks'); //#development
-                            callbackNames.forEach(callbackName => {
-                                dev.log.callback(' ->',callbackName); //#development
-            
-                                //outgoing messages
-                                    _canvas_[callbackName] = function(event){
-                                        let sudoEvent = {};
-                                        if(event instanceof KeyboardEvent){
-                                            sudoEvent = {
-                                                key: event.key,
-                                                code: event.code,
-                                                keyCode: event.keyCode,
-                                                altKey: event.altKey,
-                                                ctrlKey: event.ctrlKey,
-                                                metaKey: event.metaKey,
-                                                shiftKey: event.shiftKey,
-                                            };
-                                        }else if(event instanceof WheelEvent){
-                                            mouseData.x = event.offsetX;
-                                            mouseData.y = event.offsetY;
-                                            sudoEvent = { 
-                                                x: event.offsetX,
-                                                y: event.offsetY,
-                                                wheelDelta: event.wheelDelta,
-                                                wheelDeltaX: event.wheelDeltaX,
-                                                wheelDeltaY: event.wheelDeltaY,
-                                                altKey: event.altKey,
-                                                ctrlKey: event.ctrlKey,
-                                                metaKey: event.metaKey,
-                                                shiftKey: event.shiftKey,
-                                            };
-                                        }else if(event instanceof MouseEvent){
-                                            mouseData.x = event.offsetX;
-                                            mouseData.y = event.offsetY;
-                                            sudoEvent = { 
-                                                x: event.offsetX, 
-                                                y: event.offsetY,
-                                                altKey: event.altKey,
-                                                ctrlKey: event.ctrlKey,
-                                                metaKey: event.metaKey,
-                                                shiftKey: event.shiftKey,
-                                                buttons: event.buttons,
-                                            };
-                                        }else{
-                                            console.warn('unknown event type: ',event);
-                                        }
-                                        
-                                        communicationModule.run_withoutPromise('operator__callback__coupling_in__'+callbackName, [sudoEvent]);
-                                    };
-            
-                                //incoming messages
-                                    communicationModule.function['callback__'+callbackName] = function(xy,event,all_elements,relevant_elements){
-                                        dev.log.callback('.callback - engine has called: callback__'+callbackName+'(',xy,event,all_elements,relevant_elements); //#development
-                                        
-                                        if(core.callback.functions[callbackName]){
-                                            core.callback.functions[callbackName](xy.x,xy.y,event,{
-                                                all: all_elements.map(core.element.getElementById),
-                                                relevant: relevant_elements.map(core.element.getElementById),
-                                            });
-                                        }
-            
-                                        relevant_elements.forEach(id => callbackRegistry.call(id,callbackName,xy.x,xy.y,event) );
-                                    };
-            
-                                resolve();
-                            });
-                        });
-                    });
-                }
-            
-                this.mousePosition = function(){
-                    return mouseData;
-                };
-                this._dump = function(){
-                    dev.log.callback('._dump()'); //#development
-                    interface.operator.callback._dump();
-                };
-            };
-            
-            this.meta = new function(){
-                this.refresh = function(){
-                    return interface.operator.meta.refresh();
-                };
-            };
+            this.drawPoly = function(poly,style,strokeStyle,strokeWidth=1){
+                context.fillStyle = style;
+                context.strokeStyle = strokeStyle;
+                context.lineWidth = strokeWidth;
+                context.beginPath();
         
-            this.ready = function(){
-                core.callback.__attachCallbacks().then(() => {
-                    _canvas_.layers.declareLayerAsLoaded("core");
-                });
+                context.moveTo(poly[0].x,poly[0].y);
+                for(let a = 1; a < poly.length; a++){
+                    context.lineTo(poly[a].x,poly[a].y);
+                }
+        
+                context.closePath();
+                context.fill();
+                if(strokeStyle != undefined){context.stroke();}
             }
         };
         
-        _canvas_.layers.registerLayer("core", _canvas_.core);
+        _canvas_.layers.registerFunctionForLayer("library", function(){
+            //structuredTests
+                // {
+                //     {{include:structuredTests/math/misc.js}}
+                // }
+                // {
+                //     {{include:structuredTests/math/detectIntersect.js}}
+                // }
+                // {
+                //     {{include:structuredTests/math/pathExtrapolation.js}}
+                // }
+                // {
+                //     {{include:structuredTests/math/fitPolyIn.js}}
+                // }
+                // {
+                //     {{include:structuredTests/math/polygonsToVisibilityGraph.js}}
+                // }
+                // {
+                //     {{include:structuredTests/math/shortestRouteFromVisibilityGraph.js}}
+                // }
+                // {
+                //     {{include:structuredTests/structure.js}}
+                // }
+                // {
+                //     {{include:structuredTests/audio.js}}
+                // }
+                // {
+                //     {{include:structuredTests/font.js}}
+                // }
+                // {
+                //     {{include:structuredTests/misc.js}}
+                // }
         
-        // {{include:1.js}} //every shape
-        // {{include:2.js}} //lots of random boxes
-        // {{include:3.js}} //wavy boxes
-        // {{include:4.js}} //four corners test
-        // {{include:5.js}} //angle and scale adjustment on groups with children
-        // {{include:6.js}} //viewport adjustment
-        _canvas_.layers.registerFunctionForLayer("core", function(){
-            
-            let rectangle_1 = _canvas_.core.element.create('Rectangle','test_rectangle_1');
-            _canvas_.core.arrangement.append(rectangle_1);
-            rectangle_1.unifiedAttribute({ x:30, y:30, width:200, height:200, colour:{r:1,g:0,b:0,a:1} });
-            rectangle_1.attachCallback(
-                'onmouseenterelement',
-                () => {
-                    rectangle_1.colour({r:1,g:0.75,b:0.75,a:1});
-                    _canvas_.core.render.frame();
-                }
-            );
-            rectangle_1.attachCallback(
-                'onmouseleaveelement',
-                () => {
-                    rectangle_1.colour({r:1,g:0,b:0,a:1});
-                    _canvas_.core.render.frame();
-                }
-            );
+            //audioProcessing
+                //audioWorklet tests
+                    //workshop - only_js
+                        // {{include:audioProcessing/audioWorket/1 - testWorklet.js}} //testWorklet
+                        // {{include:audioProcessing/audioWorket/5 - amplitudeControlledModulator.js}} //amplitudeControlledModulator
+                        // {{include:audioProcessing/audioWorket/7 - squareWaveGenerator.js}} //squareWaveGenerator
+                    //workshop - wasm
+                        // {{include:audioProcessing/audioWorket/10 - squareWaveGenerator.js}} //squareWaveGenerator with wasm processor
+                        ab_1 = new _canvas_.library.audio.audioWorklet.workshop.wasm.audioBuffer_3(_canvas_.library.audio.context);
+                        gain_1 = new _canvas_.library.audio.audioWorklet.production.wasm.gain(_canvas_.library.audio.context);
+                        ab_1.connect(gain_1).connect(_canvas_.library.audio.context.destination);
+                        gain_1.gain.setValueAtTime(0.05,0);
+                        
+                        _canvas_.library.audio.loadAudioFile(result => {
+                            console.log(result.buffer);
+                            const data = result.buffer.getChannelData(0);
+                            console.log(data);
+                        
+                        
+                        }, 'url', '/sounds/78/bass_1.wav', undefined, undefined);
+                    //production - only_js
+                        // {{include:audioProcessing/audioWorket/2 - amplitudeModifier.js}} //amplitudeModifier
+                        // {{include:audioProcessing/audioWorket/4 - momentaryAmplitudeMeter.js}} //momentaryAmplitudeMeter
+                        // {{include:audioProcessing/audioWorket/6 - whiteNoiseGenerator.js}} //whiteNoiseGenerator
+                        // {{include:audioProcessing/audioWorket/8 - lagProcessor.js}} //lagProcessor
+                        // {{include:audioProcessing/audioWorket/9 - oscillator.js}} //oscillator
+                    //production - wasm
+                        // {{include:audioProcessing/audioWorket/11 - bitcrusher.js}} //bitcrusher with wasm processor
+                        // {{include:audioProcessing/audioWorket/12 - oscillator_type_1.js}} //simplistic sine-wave oscillator, edition 1
+                        // {{include:audioProcessing/audioWorket/3 - sigmoid.js}} //sigmoid with wasm processor
+                        // {{include:audioProcessing/audioWorket/13 - integrated_synthesizer_type_1.js}} //a synthesizer in an audio node
         
+                // {{include:audioProcessing/1.js}} //frequency/amplitude measure rig
         
+            //loadTests
+                // {{include:loadTests/1.js}} //heavy test
+                // {{include:loadTests/2.js}} //speed test
         
-        
-            let rectangle_2 = _canvas_.core.element.create('Rectangle','test_rectangle_2');
-            _canvas_.core.arrangement.append(rectangle_2);
-            rectangle_2.unifiedAttribute({ x:60, y:60, width:200, height:200, colour:{r:0,g:1,b:0,a:1} });
-            // rectangle_2.attachCallback(
-            //     'onmouseenterelement',
-            //     () => {
-            //         rectangle_2.colour({r:0.75,g:1,b:0.75,a:1});
-            //         _canvas_.core.render.frame();
-            //     }
-            // );
-            // rectangle_2.attachCallback(
-            //     'onmouseleaveelement',
-            //     () => {
-            //         rectangle_2.colour({r:0,g:1,b:0,a:1});
-            //         _canvas_.core.render.frame();
-            //     }
-            // );
-            rectangle_2.attachCallback( 'onmousedown', () => console.log('onmousedown!') );
-            rectangle_2.attachCallback( 'onmouseup', () => console.log('onmouseup!') );
-            rectangle_2.attachCallback( 'onclick', (xy, event) => console.log('click!', xy, event) );
-            rectangle_2.attachCallback( 'onwheel', (xy, event) => console.log('onwheel!', xy, event) );
-            rectangle_2.attachCallback( 'onkeydown', (xy, event) => console.log('onkeydown!', xy, event) );
-            rectangle_2.attachCallback( 'onkeyup', (xy, event) => console.log('onkeyup!', xy, event) );
-        
-        
-        
-        
-            let rectangle_3 = _canvas_.core.element.create('Rectangle','test_rectangle_3');
-            _canvas_.core.arrangement.append(rectangle_3);
-            rectangle_3.unifiedAttribute({ x:90, y:90, width:260, height:200, colour:{r:0,g:0,b:1,a:1} });
-            rectangle_3.attachCallback(
-                'onmouseenterelement',
-                () => {
-                    rectangle_3.colour({r:0.75,g:0.75,b:1,a:1});
-                    _canvas_.core.render.frame();
-                }
-            );
-            rectangle_3.attachCallback(
-                'onmouseleaveelement',
-                () => {
-                    rectangle_3.colour({r:0,g:0,b:1,a:1});
-                    _canvas_.core.render.frame();
-                }
-            );
-            rectangle_3.attachCallback(
-                'ondblclick',
-                () => {
-                    console.log('doubleclick!');
-                }
-            );
-        
-        
-        
-        
-            let rectangle_4 = _canvas_.core.element.create('Rectangle','test_rectangle_4');
-            _canvas_.core.arrangement.append(rectangle_4);
-            rectangle_4.unifiedAttribute({ x:90, y:140, width:250, height:150, colour:{r:1,g:0,b:1,a:1} });
-            rectangle_4.attachCallback(
-                'onmouseenterelement',
-                () => {
-                    rectangle_4.colour({r:1,g:0.75,b:1,a:1});
-                    _canvas_.core.render.frame();
-                }
-            );
-            rectangle_4.attachCallback(
-                'onmouseleaveelement',
-                () => {
-                    rectangle_4.colour({r:1,g:0,b:1,a:1});
-                    _canvas_.core.render.frame();
-                }
-            );
-        
-        
-        
-        
-            let rectangle_5 = _canvas_.core.element.create('Rectangle','test_rectangle_5');
-            _canvas_.core.arrangement.append(rectangle_5);
-            rectangle_5.unifiedAttribute({ x:90, y:300, width:250, height:150, angle:Math.PI/4, colour:{r:1,g:0,b:1,a:1} });
-            rectangle_5.attachCallback(
-                'onmouseenterelement',
-                () => {
-                    rectangle_5.colour({r:1,g:0.75,b:1,a:1});
-                    _canvas_.core.render.frame();
-                }
-            );
-            rectangle_5.attachCallback(
-                'onmouseleaveelement',
-                () => {
-                    rectangle_5.colour({r:1,g:0,b:1,a:1});
-                    _canvas_.core.render.frame();
-                }
-            );
-        
-        
-        
-        
-            // let polygon_1 = _canvas_.core.element.create('Polygon','test_polygon_1');
-            // _canvas_.core.arrangement.append(polygon_1);
-            // polygon_1.unifiedAttribute({
-            //     pointsAsXYArray:[
-            //         {x:300,y:100}, 
-            //         {x:330,y:100}, 
-            //         {x:330,y:130}, 
-            //         {x:300,y:130},
-            //         {x:280,y:115},
-            //     ],
-            //     colour:{r:1,g:0,b:1,a:1}
-            // });
-            // polygon_1.attachCallback(
-            //     'onmouseenterelement',
-            //     () => {
-            //         polygon_1.colour({r:1,g:0.75,b:1,a:1});
-            //         _canvas_.core.render.frame();
-            //     }
-            // );
-            // polygon_1.attachCallback(
-            //     'onmouseleaveelement',
-            //     () => {
-            //         polygon_1.colour({r:1,g:0,b:1,a:1});
-            //         _canvas_.core.render.frame();
-            //     }
-            // );
-        
-        
-        
-        
-            // let circle_1 = _canvas_.core.element.create('Circle','test_circle_1');
-            // _canvas_.core.arrangement.append(circle_1);
-            // circle_1.unifiedAttribute({
-            //     x:400, y:200, radius:40,
-            //     colour:{r:1,g:0,b:1,a:1}
-            // });
-            // circle_1.attachCallback(
-            //     'onmouseenterelement',
-            //     () => {
-            //         circle_1.colour({r:1,g:0.75,b:1,a:1});
-            //         _canvas_.core.render.frame();
-            //     }
-            // );
-            // circle_1.attachCallback(
-            //     'onmouseleaveelement',
-            //     () => {
-            //         circle_1.colour({r:1,g:0,b:1,a:1});
-            //         _canvas_.core.render.frame();
-            //     }
-            // );
-        
-        
-        
-        
-            // let path_1 = _canvas_.core.element.create('Path','test_path_1');
-            // path_1.unifiedAttribute({
-            //     pointsAsXYArray:[ {x:80+300,y:60}, {x:130+300,y:60}, {x:140+300,y:70}, {x:140+300,y:120}, {x:80+300,y:120} ],
-            //     thickness:5,
-            //     capType:'round',
-            //     colour:{r:0.859,g:0.2,b:0.756,a:1} 
-            // });
-            // path_1.attachCallback(
-            //     'onmouseenterelement',
-            //     () => {
-            //         path_1.colour({r:1,g:0.8,b:1,a:1} );
-            //         _canvas_.core.render.frame();
-            //     }
-            // );
-            // path_1.attachCallback(
-            //     'onmouseleaveelement',
-            //     () => {
-            //         path_1.colour({r:0.859,g:0.2,b:0.756,a:1} );
-            //         _canvas_.core.render.frame();
-            //     }
-            // );
-            // _canvas_.core.arrangement.append(path_1);
-        
-        
-        
-        
-            let clippingGroup_1 = _canvas_.core.element.create('Group','test_clippingGroup_1');
-            clippingGroup_1.unifiedAttribute({ x:400, y:300, clipActive:true });
-            _canvas_.core.arrangement.append(clippingGroup_1);
-        
-                let clippingGroup_rectangle_1 = _canvas_.core.element.create('Rectangle','test_clippingGroup_rectangle_1');
-                clippingGroup_rectangle_1.unifiedAttribute({ x:0, y:0, width:60, height:60, colour:{r:0.732,g:0.756,b:0.892,a:1} });
-                clippingGroup_rectangle_1.attachCallback( 'onmouseenterelement', () => { clippingGroup_rectangle_1.colour({r:1,g:0.756,b:1,a:1}); _canvas_.core.render.frame(); } );
-                clippingGroup_rectangle_1.attachCallback( 'onmouseleaveelement', () => { clippingGroup_rectangle_1.colour({r:0.732,g:0.756,b:0.892,a:1}); _canvas_.core.render.frame(); } );
-                clippingGroup_1.append(clippingGroup_rectangle_1);
-        
-                let clippingGroup_rectangle_2 = _canvas_.core.element.create('Rectangle','test_clippingGroup_rectangle_2');
-                clippingGroup_rectangle_2.unifiedAttribute({ x:30, y:30, width:60, height:60, colour:{r:0.107,g:0.722,b:0.945,a:1} });
-                clippingGroup_rectangle_2.attachCallback( 'onmouseenterelement', () => { clippingGroup_rectangle_2.colour({r:1,g:0.722,b:1,a:1}); _canvas_.core.render.frame(); } );
-                clippingGroup_rectangle_2.attachCallback( 'onmouseleaveelement', () => { clippingGroup_rectangle_2.colour({r:0.107,g:0.722,b:0.945,a:1}); _canvas_.core.render.frame(); } );
-                clippingGroup_1.append(clippingGroup_rectangle_2);
-        
-                let clippingGroup_rectangle_3 = _canvas_.core.element.create('Rectangle','test_clippingGroup_rectangle_3');
-                clippingGroup_rectangle_3.unifiedAttribute({ x:40, y:-10, width:60, height:60, colour:{r:0.859,g:0.573,b:0.754,a:1} });
-                clippingGroup_rectangle_3.attachCallback( 'onmouseenterelement', () => { clippingGroup_rectangle_3.colour({r:1,g:0.573,b:1,a:1}); _canvas_.core.render.frame(); } );
-                clippingGroup_rectangle_3.attachCallback( 'onmouseleaveelement', () => { clippingGroup_rectangle_3.colour({r:0.859,g:0.573,b:0.754,a:1}); _canvas_.core.render.frame(); } );
-                clippingGroup_1.append(clippingGroup_rectangle_3);
-        
-                let clippingGroup_rectangle_stencil = _canvas_.core.element.create('Rectangle','test_clippingGroup_rectangle_stencil');
-                clippingGroup_rectangle_stencil.unifiedAttribute({ width:60, height:60 });
-                clippingGroup_1.stencil(clippingGroup_rectangle_stencil);
-        
-            let rectangle_6 = _canvas_.core.element.create('Rectangle','test_clippingGroup_cover');
-            rectangle_6.unifiedAttribute({ x:400, y:300, width:60, height:60, colour:{r:0.5,g:0.5,b:0.8,a:0} });
-            _canvas_.core.arrangement.append(rectangle_6);
-        
-        
-        
-        
-            _canvas_.core.if.operator.element.executeMethod.setDotFrame(1,true);
-            _canvas_.core.if.operator.element.executeMethod.setDotFrame(2,true);
-            _canvas_.core.if.operator.element.executeMethod.setDotFrame(3,true);
-            _canvas_.core.if.operator.element.executeMethod.setDotFrame(4,true);
-            _canvas_.core.if.operator.element.executeMethod.setDotFrame(5,true);
-            _canvas_.core.if.operator.element.executeMethod.setDotFrame(6,true);
-            _canvas_.core.if.operator.element.executeMethod.setDotFrame(7,true);
-            _canvas_.core.if.operator.element.executeMethod.setDotFrame(8,true);
-        
-            // _canvas_.core.viewport.position(-100,-100);
-            // _canvas_.core.viewport.angle(0.5);
-        
-            setTimeout(()=>{ _canvas_.core.render.frame(); },500);
-        
-            // _canvas_.core.callback.callbackActivationMode("TopMostOnly");
-        } );    
-        // {{include:8.js}} //default fonts
-        // {{include:9.js}} //characterString printingMode test
-        // {{include:10.js}} //all the fonts
-        // {{include:11.js}} //onFontUpdateCallback callback and resultingWidth
-        // {{include:12.js}} //single external font test (use URL arguments 'fontName' to select a font, and 'text' to change the customizable text)
-        // {{include:13.js}} //hierarchy questions
-        // {{include:14.js}} //group methods test
-        // {{include:15.js}} //group rapid addition/remove/clearing test
-        // {{include:16.js}} //arrangement test
-        // {{include:17.js}} //repeated image request test
-        // {{include:18.js}} //lots of different images
-        // {{include:19.js}} //stress test
-        // {{include:20.js}} //deep removal / shifting test
-        // {{include:21.js}} //heedCamera test
-        // {{include:22.js}} //framebuffers
-        // {{include:23.js}} //sub framebuffers
-        // {{include:24.js}} //much usage of the canvas and imagebitmap transfers (induces bug in chrome)
-        
-        // {{include:bugs.js}}
+            //misc
+                // {{include:misc/1.js}} //angles around a circle maker
+        });
+        // {{include:1 - core/main.js}}
         // {{include:2 - system/main.js}}
         // {{include:3 - interface/main.js}}
         // {{include:4 - control/main.js}}

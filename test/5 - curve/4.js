@@ -10,8 +10,8 @@ _canvas_.layers.registerFunctionForLayer("curve", function(){
     // const sa2 = _canvas_.control.scene.addUnit(10,10,0,'stream_adder','acousticresearch');
     // const fg = _canvas_.control.scene.addUnit(10,10,0,'frequency_generator','acousticresearch');
     // const mam = _canvas_.control.scene.addUnit(10,10,0,'momentary_amplitude_meter','acousticresearch');
-    const farw = _canvas_.control.scene.addUnit(10,10,0,'frequency_amplitude_response_workstation','acousticresearch');
-    // const fg = _canvas_.control.scene.addUnit(10,10,0,'data_controlled_frequency_generator','acousticresearch');
+    // const farw = _canvas_.control.scene.addUnit(10,10,0,'frequency_amplitude_response_workstation','acousticresearch');
+    const fg = _canvas_.control.scene.addUnit(10,10,0,'data_controlled_frequency_generator','acousticresearch');
     
     
 

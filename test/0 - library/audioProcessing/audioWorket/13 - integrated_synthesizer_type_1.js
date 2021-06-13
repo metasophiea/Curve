@@ -1,5 +1,5 @@
 osc_1 = new _canvas_.library.audio.audioWorklet.production.wasm.oscillator_type_1(_canvas_.library.audio.context);
-is_1 = new _canvas_.library.audio.audioWorklet.workshop.wasm.integrated_synthesizer_type_1(_canvas_.library.audio.context);
+is_1 = new _canvas_.library.audio.audioWorklet.production.wasm.integrated_synthesizer_type_1(_canvas_.library.audio.context);
 
 osc_1.connect(is_1, undefined, 1);
 is_1.connect(_canvas_.library.audio.context.destination);

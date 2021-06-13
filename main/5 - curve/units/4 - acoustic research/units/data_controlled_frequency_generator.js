@@ -127,7 +127,7 @@ this.data_controlled_frequency_generator = function(name,x,y,angle){
                 detune_useControl:false,
                 adjust_useControl:false,
             };
-            const OSC = new _canvas_.library.audio.audioWorklet.workshop.wasm.integrated_synthesizer_type_1(_canvas_.library.audio.context);
+            const OSC = new _canvas_.library.audio.audioWorklet.production.wasm.integrated_synthesizer_type_1(_canvas_.library.audio.context);
 
             function selectWaveform(waveform){
                 if(state.waveform == waveform){ return; }

@@ -131,15 +131,13 @@ class oscillator_type_1 extends AudioWorkletProcessor {
             this.dutyCycleFrame.buffer.set( this._state.dutyCycle_useControl ? dutyCycleControl[0] : parameters.dutyCycle );
 
         //process data, and copy results to channels
-            for(let channel = 0; channel < output.length; channel++){
-                this.wasm.exports.process(
-                    frequency_useFirstOnly,
-                    gain_useFirstOnly,
-                    detune_useFirstOnly,
-                    dutyCycle_useFirstOnly,
-                );
-                output[channel].set(this.outputFrame.buffer);
-            }
+            this.wasm.exports.process(
+                frequency_useFirstOnly,
+                gain_useFirstOnly,
+                detune_useFirstOnly,
+                dutyCycle_useFirstOnly,
+            );
+            output[0].set(this.outputFrame.buffer);
         
         return true;
     }
