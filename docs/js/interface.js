@@ -60,7 +60,7 @@
                 };
             };
             _canvas_.library = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2021,m:3,d:8} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2021,m:6,d:22} };
                 const library = this;
                 
                 const dev = {
@@ -5339,6 +5339,412 @@
                                 },
                                 wasm:{
                                     list:[
+                                        {
+                                            name:'audio_buffer_type_1',
+                                            worklet:new Blob([`
+                                                class audio_buffer_type_1 extends AudioWorkletProcessor {
+                                                    static get parameterDescriptors(){
+                                                        return [
+                                                            {
+                                                                name: 'rate',
+                                                                defaultValue: 1,
+                                                                minValue: -8,
+                                                                maxValue: 8,
+                                                                automationRate: 'a-rate',
+                                                            },
+                                                        ];
+                                                    }
+                                                
+                                                    attachBuffers(){
+                                                        this.playheadPositionReadout = { pointer: this.wasm.exports.get_playhead_position_readout_pointer() };
+                                                        this.playheadPositionReadout.buffer = new Uint32Array(this.wasm.exports.memory.buffer, this.playheadPositionReadout.pointer, 1);
+                                                        this.outputFrame = { pointer: this.wasm.exports.get_output_pointer() };
+                                                        this.outputFrame.buffer = new Float32Array(this.wasm.exports.memory.buffer, this.outputFrame.pointer, 128);
+                                                        this.rateFrame = { pointer: this.wasm.exports.get_rate_pointer() };
+                                                        this.rateFrame.buffer = new Float32Array(this.wasm.exports.memory.buffer, this.rateFrame.pointer, 128);
+                                                    }
+                                                
+                                                    constructor(options){
+                                                        //construct class instance
+                                                            super(options);
+                                                
+                                                        //instance state
+                                                            this.shutdown = false;
+                                                            this._state = {
+                                                                nodeConstructorTime: undefined,
+                                                                temporaryAudioData: undefined,
+                                                                rate_useControl: false,
+                                                            };
+                                                
+                                                        //setup message receiver
+                                                            const self = this;
+                                                            this.port.onmessage = function(event){
+                                                                switch(event.data.command){
+                                                                    //time sync
+                                                                        case 'log_nodeConstructorTime':
+                                                                            self._state.nodeConstructorTime = event.data.value;
+                                                                        break;
+                                                
+                                                                    //wasm initialization
+                                                                        case 'loadWasm':
+                                                                            WebAssembly.instantiate(
+                                                                                event.data.value,
+                                                                                { env: {
+                                                                                    _onEnd: function(playhead_id){ self.port.postMessage({ command:'onEnd', value:playhead_id }); },
+                                                                                    _onLoop: function(playhead_id){ self.port.postMessage({ command:'onLoop', value:playhead_id }); },
+                                                
+                                                                                    debug_: function(id, ...args){ console.log(id+':', args.join(' ')); },
+                                                                                } },
+                                                                            ).then(result => {
+                                                                                //save wasm processor to instance
+                                                                                    self.wasm = result;
+                                                
+                                                                                //attach buffers
+                                                                                    self.attachBuffers();
+                                                
+                                                                                //assemble additional wasm buffers
+                                                                                    self.audioBufferShovelFrame = { pointer: self.wasm.exports.get_audio_buffer_shovel_pointer() };
+                                                
+                                                                                //load data if necessary
+                                                                                    if(self._state.temporaryAudioData != undefined){
+                                                                                        self.transferAudioBufferDataIn(
+                                                                                            self._state.temporaryAudioData
+                                                                                        );
+                                                                                        self._state.temporaryAudioData = undefined;
+                                                                                    }
+                                                                            });
+                                                                        break;
+                                                                    
+                                                                    //load data
+                                                                        case "loadAudioData":
+                                                                            if(self.wasm == undefined){
+                                                                                self._state.temporaryAudioData = event.data.value;
+                                                                            } else {
+                                                                                self.transferAudioBufferDataIn(event.data.value);
+                                                                            }
+                                                
+                                                                            self.port.postMessage({
+                                                                                command: 'loadAudioData_loadComplete', 
+                                                                                value: undefined,
+                                                                            });
+                                                                        break;
+                                                
+                                                                    //performance control
+                                                                        case 'play':
+                                                                            self.wasm.exports.play();
+                                                                        break;
+                                                                        case 'stop':
+                                                                            self.wasm.exports.stop();
+                                                                        break;
+                                                
+                                                                        case 'set_loop_active':
+                                                                            self.wasm.exports.set_loop_active(event.data.value);
+                                                                        break;
+                                                
+                                                                        case 'set_playhead_position':
+                                                                            self.wasm.exports.set_playhead_position(event.data.value);
+                                                                        break;
+                                                                        case 'got_to_start':
+                                                                            self.wasm.exports.got_to_start();
+                                                                        break;
+                                                                        case 'got_to_end':
+                                                                            self.wasm.exports.got_to_end();
+                                                                        break;
+                                                
+                                                                        case 'section_start':
+                                                                            console.log("section_start:", event.data.value);
+                                                                            self.wasm.exports.section_start(event.data.value);
+                                                                        break;
+                                                                        case 'section_end':
+                                                                            console.log("section_end:", event.data.value);
+                                                                            self.wasm.exports.section_end(event.data.value);
+                                                                        break;
+                                                                        case 'maximize_section':
+                                                                            self.wasm.exports.maximize_section();
+                                                                        break;
+                                                                        case 'invert_section':
+                                                                            self.wasm.exports.invert_section();
+                                                                        break;
+                                                
+                                                                    //status
+                                                                        case 'getPlayheadPosition':
+                                                                            if(event.data.value.calculateDelay){
+                                                                                const calculatedPresentTime = globalThis.currentTime*1000 + self._state.nodeConstructorTime;
+                                                                                const sendingDelay = calculatedPresentTime - event.data.sendTime;
+                                                    
+                                                                                self.port.postMessage({
+                                                                                    command:'getPlayheadPosition_return', 
+                                                                                    value: {
+                                                                                        playheadPosition: self.playheadPositionReadout.buffer[0],
+                                                                                        sendingDelay: sendingDelay,
+                                                                                    },
+                                                                                    sendTime: globalThis.currentTime*1000,
+                                                                                });
+                                                                            } else {
+                                                                                self.port.postMessage({
+                                                                                    command:'getPlayheadPosition_return', 
+                                                                                    value: {
+                                                                                        playheadPosition: self.playheadPositionReadout.buffer[0],
+                                                                                    },
+                                                                                });
+                                                                            }
+                                                                        break;
+                                                
+                                                                    //use control
+                                                                        case 'rate_useControl': 
+                                                                            self._state.rate_useControl = event.data.value;
+                                                                        break;
+                                                
+                                                                    //shutdown
+                                                                        case 'shutdown':
+                                                                            self.shutdown = true;
+                                                                        break;
+                                                                }
+                                                            };
+                                                    }
+                                                
+                                                    transferAudioBufferDataIn(audio_data){
+                                                        this.wasm.exports.clear_audio_buffer();
+                                                
+                                                        const shovelSize = this.wasm.exports.get_shovel_size();
+                                                        const block_count = (Math.floor(audio_data.length / shovelSize) + 1);
+                                                        for(let block = 0; block < block_count; block++) {
+                                                            //reattach shovel buffer 
+                                                                this.audioBufferShovelFrame.buffer = new Float32Array(
+                                                                    this.wasm.exports.memory.buffer, 
+                                                                    this.wasm.exports.get_audio_buffer_shovel_pointer(), 
+                                                                    shovelSize
+                                                                );
+                                                
+                                                            //shovel block in
+                                                                const data_to_send = audio_data.slice( block*shovelSize, (block+1)*shovelSize );
+                                                                this.audioBufferShovelFrame.buffer.set(data_to_send);
+                                                                this.wasm.exports.shovel_audio_data_in(data_to_send.length);
+                                                        }
+                                                
+                                                        this.attachBuffers();
+                                                    }
+                                                
+                                                    process(inputs, outputs, parameters){
+                                                        if(this.shutdown){ return false; }
+                                                        if(this.wasm == undefined){ return true; }
+                                                
+                                                        //collect inputs/outputs
+                                                            const output = outputs[0];
+                                                            const rateControl = inputs[0];
+                                                
+                                                        //populate input buffers
+                                                            const rate_useFirstOnly = this._state.rate_useControl ? false : parameters.rate.length == 1;
+                                                            this.rateFrame.buffer.set( this._state.rate_useControl && rateControl[0] != undefined ? rateControl[0] : parameters.rate );
+                                                
+                                                        //have wasm process data, and copy results to channels
+                                                            this.wasm.exports.process(
+                                                                rate_useFirstOnly,
+                                                            );
+                                                            for(let channel = 0; channel < output.length; channel++){
+                                                                output[channel].set(this.outputFrame.buffer);
+                                                            }
+                                                
+                                                        return true;
+                                                    }
+                                                }
+                                                registerProcessor('audio_buffer_type_1', audio_buffer_type_1);
+                                            `], { type: "text/javascript" }),
+                                            class:
+                                                class audio_buffer_type_1 extends AudioWorkletNode{
+                                                    static wasm_url = 'wasm/audio_processing/audio_buffer_type_1.production.wasm';
+                                                    // static wasm_url = 'wasm/audio_processing/audio_buffer_type_1.development.wasm';
+                                                    static fetch_promise;
+                                                    static compiled_wasm;
+                                                
+                                                    constructor(context, options={}){
+                                                        const nodeConstructorTime = performance.now();
+                                                
+                                                        //populate options
+                                                            options.numberOfInputs = 1; //rate
+                                                            options.numberOfOutputs = 1;
+                                                            options.channelCount = 1;
+                                                
+                                                        //generate class instance
+                                                            super(context, 'audio_buffer_type_1', options);
+                                                
+                                                        //time sync
+                                                            this.nodeConstructorTime = nodeConstructorTime;
+                                                            this.port.postMessage({command:'log_nodeConstructorTime', value:this.nodeConstructorTime});
+                                                
+                                                        //load wasm processor
+                                                            audio.audioWorklet.requestWasm(audio_buffer_type_1, this);
+                                                
+                                                        //instance state
+                                                            this._state = {
+                                                                audioFileLength: undefined,
+                                                                loop: false,
+                                                                section: {
+                                                                    start: 0,
+                                                                    end: 1,
+                                                                },
+                                                            };
+                                                        
+                                                        //load data
+                                                            let loadAudioData_promiseResolve;
+                                                            this.loadAudioData = function(audioData){
+                                                                let maximize = this._state.section.start == 0 && this._state.section.end == this._state.audioFileLength;
+                                                                this._state.audioFileLength = audioData.length;
+                                                                if(maximize || this._state.audioFileLength < this._state.section.start && this._state.audioFileLength < this._state.section.end){
+                                                                    this._state.section.start = 0;
+                                                                    this._state.section.end = this._state.audioFileLength;
+                                                                }
+                                                                if(this._state.audioFileLength < this._state.section.start){ this._state.section.start = this._state.audioFileLength; }
+                                                                if(this._state.audioFileLength < this._state.section.end){ this._state.section.end = this._state.audioFileLength; }
+                                                    
+                                                                this.port.postMessage({command:'loadAudioData', value:audioData});
+                                                
+                                                                return new Promise((resolve, reject) => {
+                                                                    loadAudioData_promiseResolve = resolve;
+                                                                });
+                                                            };
+                                                
+                                                        //performance control
+                                                            this.play = function(){
+                                                                this.port.postMessage({command:'play', value:undefined});
+                                                            };
+                                                            this.stop = function(){
+                                                                this.port.postMessage({command:'stop', value:undefined});
+                                                            };
+                                                
+                                                            this.gotoStart = function(){
+                                                                this.port.postMessage({command:'go_to_start', value:undefined});
+                                                            };
+                                                            this.gotoEnd = function(){
+                                                                this.port.postMessage({command:'go_to_end', value:undefined});
+                                                            };
+                                                
+                                                            this.maximizeSection = function(){
+                                                                this._state.section.start = 0
+                                                                this._state.section.end = this._state.audioFileLength;
+                                                                this.port.postMessage({command:'maximize_section', value:undefined});
+                                                            };
+                                                            this.invertSection = function(){
+                                                                const tmp = this._state.section.start
+                                                                this._state.section.start = this._state.section.end;
+                                                                this._state.section.end = tmp;
+                                                                this.port.postMessage({command:'invert_section', value:undefined});
+                                                            };
+                                                
+                                                        //status
+                                                            let getPlayheadPosition_promiseResolve;
+                                                            this.getPlayheadPosition = function(calculateDelay=false){
+                                                                this.port.postMessage({
+                                                                    command:'getPlayheadPosition', 
+                                                                    value:{
+                                                                        calculateDelay: calculateDelay
+                                                                    },
+                                                                    sendTime:performance.now(),
+                                                                });
+                                                                return new Promise((resolve, reject) => {
+                                                                    getPlayheadPosition_promiseResolve = resolve;
+                                                                });
+                                                            };
+                                                
+                                                        //shutdown
+                                                            this.shutdown = function(){
+                                                                this.port.postMessage({command:'shutdown', value:undefined});
+                                                                this.port.close();
+                                                            };
+                                                
+                                                        //callbacks
+                                                            this.onEnd = function(){ /*console.log('onEnd!');*/ };
+                                                            this.onLoop = function(){ /*console.log('onLoop!');*/ };
+                                                
+                                                        //setup message receiver
+                                                            const self = this;
+                                                            this.port.onmessage = function(event){
+                                                                switch(event.data.command){
+                                                                    case 'onEnd': self.onEnd(event.data.value); break;
+                                                                    case 'onLoop': self.onLoop(event.data.value); break;
+                                                                    case 'getPlayheadPosition_return':
+                                                                        if(getPlayheadPosition_promiseResolve != undefined){
+                                                                            if(event.data.value.sendingDelay == undefined) {
+                                                                                getPlayheadPosition_promiseResolve(event.data.value.playheadPosition);
+                                                                            } else {
+                                                                                const sendingDelay = (event.data.sendTime + nodeConstructorTime) - performance.now();
+                                                                                const completeDelay = event.data.value.sendingDelay + sendingDelay;
+                                                                                getPlayheadPosition_promiseResolve({playheadPosition:event.data.value, resultDelay:completeDelay});
+                                                                            }
+                                                                            getPlayheadPosition_promiseResolve = undefined;
+                                                                        }
+                                                                    break;
+                                                                    case 'loadAudioData_loadComplete':
+                                                                        loadAudioData_promiseResolve();
+                                                                        loadAudioData_promiseResolve = undefined;
+                                                                    break;
+                                                                }
+                                                            };
+                                                    }
+                                                
+                                                    get length(){
+                                                        return this._state.audioFileLength;
+                                                    }
+                                                    set playheadPosition(position){
+                                                        this.port.postMessage({command:'set_playhead_position', value:position});
+                                                    }
+                                                
+                                                    get loop(){
+                                                        return this._state.loop;
+                                                    }
+                                                    set loop(bool){
+                                                        this._state.loop = bool;
+                                                        this.port.postMessage({command:'set_loop_active', value:bool});
+                                                    }
+                                                
+                                                    get sectionStart(){
+                                                        return this._state.section.start;
+                                                    }
+                                                    set sectionStart(position){
+                                                        if(position > this._state.audioFileLength-1){
+                                                            console.warn("audio_buffer_type_1 - attempting to select a section start position \""+position+"\" which exceeds the audio data length \""+(this._state.audioFileLength-1)+"\". Position will be corrected");
+                                                            position = this._state.audioFileLength-1;
+                                                        }
+                                                        if(position < 0){
+                                                            console.warn("audio_buffer_type_1 - attempting to select a section start position below zero. Position will be corrected");
+                                                            position = 0;
+                                                        }
+                                                
+                                                        this._state.section.start = position;
+                                                
+                                                        this.port.postMessage({command:'section_start', value:position});
+                                                    }
+                                                    get sectionEnd(){
+                                                        return this._state.section.end;
+                                                    }
+                                                    set sectionEnd(position){
+                                                        if(position > this._state.audioFileLength-1){
+                                                            console.warn("audio_buffer_type_1 - attempting to select a section end position \""+position+"\" which exceeds the audio data length \""+(this._state.audioFileLength-1)+"\". Position will be corrected");
+                                                            position = this._state.audioFileLength-1;
+                                                        }
+                                                        if(position < 0){
+                                                            console.warn("audio_buffer_type_1 - attempting to select a section end position below zero. Position will be corrected");
+                                                            position = 0;
+                                                        }
+                                                
+                                                        this._state.section.end = position;
+                                                
+                                                        this.port.postMessage({command:'section_end', value:position});
+                                                    }
+                                                
+                                                    get rate(){
+                                                        return this.parameters.get('rate');
+                                                    }
+                                                    get rate_useControl(){
+                                                        return this._state.rate_useControl;
+                                                    }
+                                                    set rate_useControl(bool){
+                                                        this._state.rate_useControl = bool;
+                                                        this.port.postMessage({command:'rate_useControl', value:bool});
+                                                    }
+                                                }
+                                            ,
+                                        },
                                         //single waveform output
                                         //four waveforms - sine / square / triangle / noise
                                         //frequency controlled by parameter
@@ -5483,15 +5889,13 @@
                                                             this.dutyCycleFrame.buffer.set( this._state.dutyCycle_useControl ? dutyCycleControl[0] : parameters.dutyCycle );
                                                 
                                                         //process data, and copy results to channels
-                                                            for(let channel = 0; channel < output.length; channel++){
-                                                                this.wasm.exports.process(
-                                                                    frequency_useFirstOnly,
-                                                                    gain_useFirstOnly,
-                                                                    detune_useFirstOnly,
-                                                                    dutyCycle_useFirstOnly,
-                                                                );
-                                                                output[channel].set(this.outputFrame.buffer);
-                                                            }
+                                                            this.wasm.exports.process(
+                                                                frequency_useFirstOnly,
+                                                                gain_useFirstOnly,
+                                                                detune_useFirstOnly,
+                                                                dutyCycle_useFirstOnly,
+                                                            );
+                                                            output[0].set(this.outputFrame.buffer);
                                                         
                                                         return true;
                                                     }
@@ -6034,6 +6438,241 @@
                                                     get gain(){
                                                         return this.parameters.get('gain');
                                                     }
+                                                }
+                                            ,
+                                        },
+                                        {
+                                            name:'integrated_synthesizer_type_1',
+                                            worklet:new Blob([`
+                                                const debug = function(id, ...args){ console.log(id+':', args.join(' ')); };
+                                                
+                                                class integrated_synthesizer_type_1 extends AudioWorkletProcessor {
+                                                    static detuneMux = 0.1;
+                                                    static detuneBounds = 1/integrated_synthesizer_type_1.detuneMux;
+                                                    static availableWaveforms = ['sine', 'square', 'triangle'];
+                                                
+                                                    static get parameterDescriptors(){
+                                                        return [
+                                                            {
+                                                                name: 'gain',
+                                                                defaultValue: 1,
+                                                                minValue: -1,
+                                                                maxValue: 1,
+                                                                automationRate: 'a-rate',
+                                                            },{
+                                                                name: 'detune',
+                                                                defaultValue: 0,
+                                                                minValue: -integrated_synthesizer_type_1.detuneBounds,
+                                                                maxValue: integrated_synthesizer_type_1.detuneBounds,
+                                                                automationRate: 'a-rate',
+                                                            },{
+                                                                name: 'dutyCycle',
+                                                                defaultValue: 0.5,
+                                                                minValue: 0,
+                                                                maxValue: 1,
+                                                                automationRate: 'a-rate',
+                                                            },
+                                                        ];
+                                                    }
+                                                
+                                                    constructor(options){
+                                                        //construct class instance
+                                                            super(options);
+                                                
+                                                        //instance state
+                                                            this.shutdown = false;
+                                                            this._state = {
+                                                                gain_useControl: false,
+                                                                detune_useControl: false,
+                                                                dutyCycle_useControl: false,
+                                                
+                                                                selected_waveform: 0,
+                                                            };
+                                                
+                                                            //setup message receiver
+                                                                const self = this;
+                                                                this.port.onmessage = function(event){
+                                                                    switch(event.data.command){
+                                                                        //wasm initialization
+                                                                            case 'loadWasm':
+                                                                                WebAssembly.instantiate(
+                                                                                    event.data.value,
+                                                                                    { env: { Math_random: Math.random, debug_: debug, } },
+                                                                                ).then(result => {
+                                                                                    //save wasm processor to instance
+                                                                                        self.wasm = result;
+                                                    
+                                                                                    //assemble wasm buffers
+                                                                                        self.gainFrame = { pointer: self.wasm.exports.get_gain_pointer() };
+                                                                                        self.gainFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.gainFrame.pointer, 128);
+                                                                                        self.detuneFrame = { pointer: self.wasm.exports.get_detune_pointer() };
+                                                                                        self.detuneFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.detuneFrame.pointer, 128);
+                                                                                        self.dutyCycleFrame = { pointer: self.wasm.exports.get_duty_cycle_pointer() };
+                                                                                        self.dutyCycleFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.dutyCycleFrame.pointer, 128);
+                                                                                        self.outputFrame = { pointer: self.wasm.exports.get_output_pointer() };
+                                                                                        self.outputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.outputFrame.pointer, 128);
+                                                    
+                                                                                    //re-send waveform selection (just incase)
+                                                                                        self.wasm.exports.select_waveform(self._state.selected_waveform);
+                                                                                });
+                                                                            break;
+                                                                        
+                                                                        //performance control
+                                                                            case 'perform':
+                                                                                self.wasm.exports.perform(event.data.value.frequency, event.data.value.velocity);
+                                                                            break;
+                                                                            case 'stopAll':
+                                                                                self.wasm.exports.stop_all();
+                                                                            break;
+                                                
+                                                                        //shutdown
+                                                                            case 'shutdown':
+                                                                                self.shutdown = true;
+                                                                            break;
+                                                    
+                                                                        //use control
+                                                                            case 'gain_useControl': 
+                                                                                self._state.gain_useControl = event.data.value;
+                                                                            break;
+                                                                            case 'detune_useControl': 
+                                                                                self._state.detune_useControl = event.data.value;
+                                                                            break;
+                                                                            case 'dutyCycle_useControl': 
+                                                                                self._state.dutyCycle_useControl = event.data.value;
+                                                                            break;
+                                                    
+                                                                        //waveform
+                                                                            case 'waveform':
+                                                                                self._state.selected_waveform = integrated_synthesizer_type_1.availableWaveforms.indexOf(event.data.value);
+                                                                                if(self.wasm == undefined){ return; }
+                                                                                self.wasm.exports.select_waveform(self._state.selected_waveform);
+                                                                            break;
+                                                                    }
+                                                                };
+                                                    }
+                                                
+                                                    process(inputs, outputs, parameters){
+                                                        if(this.shutdown){ return false; }
+                                                        if(this.wasm == undefined){ return true; }
+                                                
+                                                        //collect inputs/outputs
+                                                            const output = outputs[0];
+                                                            const gainControl = inputs[0];
+                                                            const detuneControl = inputs[1];
+                                                            const dutyCycleControl = inputs[2];
+                                                
+                                                        //populate input buffers
+                                                            const gain_useFirstOnly = this._state.gain_useControl ? false : parameters.gain.length == 1;
+                                                            this.gainFrame.buffer.set( this._state.gain_useControl && gainControl[0] != undefined ? gainControl[0] : parameters.gain );
+                                                
+                                                            const detune_useFirstOnly = this._state.detune_useControl ? false : parameters.detune.length == 1;
+                                                            this.detuneFrame.buffer.set( this._state.detune_useControl && detuneControl[0] != undefined ? detuneControl[0] : parameters.detune );
+                                                
+                                                            const dutyCycle_useFirstOnly = this._state.dutyCycle_useControl ? false : parameters.dutyCycle.length == 1;
+                                                            this.dutyCycleFrame.buffer.set( this._state.dutyCycle_useControl && dutyCycleControl[0] != undefined ? dutyCycleControl[0] : parameters.dutyCycle );
+                                                
+                                                        //process data, and copy results to channels
+                                                            for(let channel = 0; channel < output.length; channel++){
+                                                                this.wasm.exports.process(
+                                                                    gain_useFirstOnly,
+                                                                    detune_useFirstOnly,
+                                                                    dutyCycle_useFirstOnly,
+                                                                );
+                                                                output[channel].set(this.outputFrame.buffer);
+                                                            }
+                                                        
+                                                        return true;
+                                                    }
+                                                }
+                                                registerProcessor('integrated_synthesizer_type_1', integrated_synthesizer_type_1);
+                                            `], { type: "text/javascript" }),
+                                            class:
+                                                class integrated_synthesizer_type_1 extends AudioWorkletNode {
+                                                    static wasm_url = 'wasm/audio_processing/integrated_synthesizer_type_1.production.wasm';
+                                                    // static wasm_url = 'wasm/audio_processing/integrated_synthesizer_type_1.development.wasm';
+                                                    static fetch_promise;
+                                                    static compiled_wasm;
+                                                
+                                                    constructor(context, options={}){
+                                                        //populate options
+                                                            options.numberOfInputs = 3;
+                                                            options.numberOfOutputs = 1;
+                                                            options.channelCount = 1;
+                                                
+                                                        //generate class instance
+                                                            super(context, 'integrated_synthesizer_type_1', options);
+                                                
+                                                        //load wasm processor
+                                                            audio.audioWorklet.requestWasm(integrated_synthesizer_type_1, this);
+                                                
+                                                        //instance state
+                                                            this._state = {
+                                                                gain_useControl: false,
+                                                                detune_useControl: false,
+                                                                dutyCycle_useControl: false,
+                                                
+                                                                waveform: 'sine',
+                                                            };
+                                                
+                                                        //performance control
+                                                            this.perform = function(frequency, velocity=1){
+                                                                this.port.postMessage({command:'perform', value:{frequency:frequency, velocity:velocity}});
+                                                            };
+                                                            this.stopAll = function(){
+                                                                this.port.postMessage({command:'stopAll', value:undefined});
+                                                            };
+                                                
+                                                        //shutdown
+                                                            this.shutdown = function(){
+                                                                this.port.postMessage({command:'shutdown', value:undefined});
+                                                                this.port.close();
+                                                            };
+                                                        }
+                                                    
+                                                    //gain
+                                                        get gain(){
+                                                            return this.parameters.get('gain');
+                                                        }
+                                                        get gain_useControl(){
+                                                            return this._state.gain_useControl;
+                                                        }
+                                                        set gain_useControl(bool){
+                                                            this._state.gain_useControl = bool;
+                                                            this.port.postMessage({command:'gain_useControl', value:bool});
+                                                        }
+                                                
+                                                    //detune
+                                                        get detune(){
+                                                            return this.parameters.get('detune');
+                                                        }
+                                                        get detune_useControl(){
+                                                            return this._state.detune_useControl;
+                                                        }
+                                                        set detune_useControl(bool){
+                                                            this._state.detune_useControl = bool;
+                                                            this.port.postMessage({command:'detune_useControl', value:bool});
+                                                        }
+                                                
+                                                    //dutyCycle
+                                                        get dutyCycle(){
+                                                            return this.parameters.get('dutyCycle');
+                                                        }
+                                                        get dutyCycle_useControl(){
+                                                            return this._state.dutyCycle_useControl;
+                                                        }
+                                                        set dutyCycle_useControl(bool){
+                                                            this._state.dutyCycle_useControl = bool;
+                                                            this.port.postMessage({command:'dutyCycle_useControl', value:bool});
+                                                        }
+                                                
+                                                    //waveform
+                                                        get waveform(){
+                                                            return this._state.waveform;
+                                                        }
+                                                        set waveform(value){ // sine / square / triangle
+                                                            this._state.waveform = value;
+                                                            this.port.postMessage({command:'waveform', value:value});
+                                                        }
                                                 }
                                             ,
                                         },
@@ -7661,241 +8300,6 @@
                                                     get dutyCycle(){
                                                         return this.parameters.get('dutyCycle');
                                                     }
-                                                }
-                                            ,
-                                        },
-                                        {
-                                            name:'integrated_synthesizer_type_1',
-                                            worklet:new Blob([`
-                                                const debug = function(id, ...args){ console.log(id+':', args.join(' ')); };
-                                                
-                                                class integrated_synthesizer_type_1 extends AudioWorkletProcessor {
-                                                    static detuneMux = 0.1;
-                                                    static detuneBounds = 1/integrated_synthesizer_type_1.detuneMux;
-                                                    static availableWaveforms = ['sine', 'square', 'triangle'];
-                                                
-                                                    static get parameterDescriptors(){
-                                                        return [
-                                                            {
-                                                                name: 'gain',
-                                                                defaultValue: 1,
-                                                                minValue: -1,
-                                                                maxValue: 1,
-                                                                automationRate: 'a-rate',
-                                                            },{
-                                                                name: 'detune',
-                                                                defaultValue: 0,
-                                                                minValue: -integrated_synthesizer_type_1.detuneBounds,
-                                                                maxValue: integrated_synthesizer_type_1.detuneBounds,
-                                                                automationRate: 'a-rate',
-                                                            },{
-                                                                name: 'dutyCycle',
-                                                                defaultValue: 0.5,
-                                                                minValue: 0,
-                                                                maxValue: 1,
-                                                                automationRate: 'a-rate',
-                                                            },
-                                                        ];
-                                                    }
-                                                
-                                                    constructor(options){
-                                                        //construct class instance
-                                                            super(options);
-                                                
-                                                        //instance state
-                                                            this.shutdown = false;
-                                                            this._state = {
-                                                                gain_useControl: false,
-                                                                detune_useControl: false,
-                                                                dutyCycle_useControl: false,
-                                                
-                                                                selected_waveform: 0,
-                                                            };
-                                                
-                                                            //setup message receiver
-                                                                const self = this;
-                                                                this.port.onmessage = function(event){
-                                                                    switch(event.data.command){
-                                                                        //wasm initialization
-                                                                            case 'loadWasm':
-                                                                                WebAssembly.instantiate(
-                                                                                    event.data.value,
-                                                                                    { env: { Math_random: Math.random, debug_: debug, } },
-                                                                                ).then(result => {
-                                                                                    //save wasm processor to instance
-                                                                                        self.wasm = result;
-                                                    
-                                                                                    //assemble wasm buffers
-                                                                                        self.gainFrame = { pointer: self.wasm.exports.get_gain_pointer() };
-                                                                                        self.gainFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.gainFrame.pointer, 128);
-                                                                                        self.detuneFrame = { pointer: self.wasm.exports.get_detune_pointer() };
-                                                                                        self.detuneFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.detuneFrame.pointer, 128);
-                                                                                        self.dutyCycleFrame = { pointer: self.wasm.exports.get_duty_cycle_pointer() };
-                                                                                        self.dutyCycleFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.dutyCycleFrame.pointer, 128);
-                                                                                        self.outputFrame = { pointer: self.wasm.exports.get_output_pointer() };
-                                                                                        self.outputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.outputFrame.pointer, 128);
-                                                    
-                                                                                    //re-send waveform selection (just incase)
-                                                                                        self.wasm.exports.select_waveform(self._state.selected_waveform);
-                                                                                });
-                                                                            break;
-                                                                        
-                                                                        //performance control
-                                                                            case 'perform':
-                                                                                self.wasm.exports.perform(event.data.value.frequency, event.data.value.velocity);
-                                                                            break;
-                                                                            case 'stopAll':
-                                                                                self.wasm.exports.stop_all();
-                                                                            break;
-                                                
-                                                                        //shutdown
-                                                                            case 'shutdown':
-                                                                                self.shutdown = true;
-                                                                            break;
-                                                    
-                                                                        //use control
-                                                                            case 'gain_useControl': 
-                                                                                self._state.gain_useControl = event.data.value;
-                                                                            break;
-                                                                            case 'detune_useControl': 
-                                                                                self._state.detune_useControl = event.data.value;
-                                                                            break;
-                                                                            case 'dutyCycle_useControl': 
-                                                                                self._state.dutyCycle_useControl = event.data.value;
-                                                                            break;
-                                                    
-                                                                        //waveform
-                                                                            case 'waveform':
-                                                                                self._state.selected_waveform = integrated_synthesizer_type_1.availableWaveforms.indexOf(event.data.value);
-                                                                                if(self.wasm == undefined){ return; }
-                                                                                self.wasm.exports.select_waveform(self._state.selected_waveform);
-                                                                            break;
-                                                                    }
-                                                                };
-                                                    }
-                                                
-                                                    process(inputs, outputs, parameters){
-                                                        if(this.shutdown){ return false; }
-                                                        if(this.wasm == undefined){ return true; }
-                                                
-                                                        //collect inputs/outputs
-                                                            const output = outputs[0];
-                                                            const gainControl = inputs[0];
-                                                            const detuneControl = inputs[1];
-                                                            const dutyCycleControl = inputs[2];
-                                                
-                                                        //populate input buffers
-                                                            const gain_useFirstOnly = this._state.gain_useControl ? false : parameters.gain.length == 1;
-                                                            this.gainFrame.buffer.set( this._state.gain_useControl && gainControl[0] != undefined ? gainControl[0] : parameters.gain );
-                                                
-                                                            const detune_useFirstOnly = this._state.detune_useControl ? false : parameters.detune.length == 1;
-                                                            this.detuneFrame.buffer.set( this._state.detune_useControl && detuneControl[0] != undefined ? detuneControl[0] : parameters.detune );
-                                                
-                                                            const dutyCycle_useFirstOnly = this._state.dutyCycle_useControl ? false : parameters.dutyCycle.length == 1;
-                                                            this.dutyCycleFrame.buffer.set( this._state.dutyCycle_useControl && dutyCycleControl[0] != undefined ? dutyCycleControl[0] : parameters.dutyCycle );
-                                                
-                                                        //process data, and copy results to channels
-                                                            for(let channel = 0; channel < output.length; channel++){
-                                                                this.wasm.exports.process(
-                                                                    gain_useFirstOnly,
-                                                                    detune_useFirstOnly,
-                                                                    dutyCycle_useFirstOnly,
-                                                                );
-                                                                output[channel].set(this.outputFrame.buffer);
-                                                            }
-                                                        
-                                                        return true;
-                                                    }
-                                                }
-                                                registerProcessor('integrated_synthesizer_type_1', integrated_synthesizer_type_1);
-                                            `], { type: "text/javascript" }),
-                                            class:
-                                                class integrated_synthesizer_type_1 extends AudioWorkletNode {
-                                                    // static wasm_url = 'wasm/audio_processing/integrated_synthesizer_type_1.production.wasm';
-                                                    static wasm_url = 'wasm/audio_processing/integrated_synthesizer_type_1.development.wasm';
-                                                    static fetch_promise;
-                                                    static compiled_wasm;
-                                                
-                                                    constructor(context, options={}){
-                                                        //populate options
-                                                            options.numberOfInputs = 3;
-                                                            options.numberOfOutputs = 1;
-                                                            options.channelCount = 1;
-                                                
-                                                        //generate class instance
-                                                            super(context, 'integrated_synthesizer_type_1', options);
-                                                
-                                                        //load wasm processor
-                                                            audio.audioWorklet.requestWasm(integrated_synthesizer_type_1, this);
-                                                
-                                                        //instance state
-                                                            this._state = {
-                                                                gain_useControl: false,
-                                                                detune_useControl: false,
-                                                                dutyCycle_useControl: false,
-                                                
-                                                                waveform: 'sine',
-                                                            };
-                                                
-                                                        //performance control
-                                                            this.perform = function(frequency, velocity=1){
-                                                                this.port.postMessage({command:'perform', value:{frequency:frequency, velocity:velocity}});
-                                                            };
-                                                            this.stopAll = function(){
-                                                                this.port.postMessage({command:'stopAll', value:undefined});
-                                                            };
-                                                
-                                                        //shutdown
-                                                            this.shutdown = function(){
-                                                                this.port.postMessage({command:'shutdown', value:undefined});
-                                                                this.port.close();
-                                                            };
-                                                        }
-                                                    
-                                                    //gain
-                                                        get gain(){
-                                                            return this.parameters.get('gain');
-                                                        }
-                                                        get gain_useControl(){
-                                                            return this._state.gain_useControl;
-                                                        }
-                                                        set gain_useControl(bool){
-                                                            this._state.gain_useControl = bool;
-                                                            this.port.postMessage({command:'gain_useControl', value:bool});
-                                                        }
-                                                
-                                                    //detune
-                                                        get detune(){
-                                                            return this.parameters.get('detune');
-                                                        }
-                                                        get detune_useControl(){
-                                                            return this._state.detune_useControl;
-                                                        }
-                                                        set detune_useControl(bool){
-                                                            this._state.detune_useControl = bool;
-                                                            this.port.postMessage({command:'detune_useControl', value:bool});
-                                                        }
-                                                
-                                                    //dutyCycle
-                                                        get dutyCycle(){
-                                                            return this.parameters.get('dutyCycle');
-                                                        }
-                                                        get dutyCycle_useControl(){
-                                                            return this._state.dutyCycle_useControl;
-                                                        }
-                                                        set dutyCycle_useControl(bool){
-                                                            this._state.dutyCycle_useControl = bool;
-                                                            this.port.postMessage({command:'dutyCycle_useControl', value:bool});
-                                                        }
-                                                
-                                                    //waveform
-                                                        get waveform(){
-                                                            return this._state.waveform;
-                                                        }
-                                                        set waveform(value){ // sine / square / triangle
-                                                            this._state.waveform = value;
-                                                            this.port.postMessage({command:'waveform', value:value});
-                                                        }
                                                 }
                                             ,
                                         },

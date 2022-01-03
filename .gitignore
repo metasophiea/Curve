@@ -1,3 +1,6 @@
 main/1 - core/engine/rust/master/target/
+main/1 - core/engine/rust/master/target.nosync/
 main/0 - library/modules/audio/audioWorklet/workshop - wasm/*/rust/target/
+main/0 - library/modules/audio/audioWorklet/workshop - wasm/*/rust/target.nosync/
 main/0 - library/modules/audio/audioWorklet/production - wasm/*/rust/target/
+main/0 - library/modules/audio/audioWorklet/production - wasm/*/rust/target.nosync/

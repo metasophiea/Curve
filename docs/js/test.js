@@ -111,7 +111,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
             };
         };
         _canvas_.library = new function(){
-            this.versionInformation = { tick:0, lastDateModified:{y:2021,m:3,d:8} };
+            this.versionInformation = { tick:0, lastDateModified:{y:2021,m:6,d:22} };
             const library = this;
             
             const dev = {
@@ -5390,6 +5390,412 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             },
                             wasm:{
                                 list:[
+                                    {
+                                        name:'audio_buffer_type_1',
+                                        worklet:new Blob([`
+                                            class audio_buffer_type_1 extends AudioWorkletProcessor {
+                                                static get parameterDescriptors(){
+                                                    return [
+                                                        {
+                                                            name: 'rate',
+                                                            defaultValue: 1,
+                                                            minValue: -8,
+                                                            maxValue: 8,
+                                                            automationRate: 'a-rate',
+                                                        },
+                                                    ];
+                                                }
+                                            
+                                                attachBuffers(){
+                                                    this.playheadPositionReadout = { pointer: this.wasm.exports.get_playhead_position_readout_pointer() };
+                                                    this.playheadPositionReadout.buffer = new Uint32Array(this.wasm.exports.memory.buffer, this.playheadPositionReadout.pointer, 1);
+                                                    this.outputFrame = { pointer: this.wasm.exports.get_output_pointer() };
+                                                    this.outputFrame.buffer = new Float32Array(this.wasm.exports.memory.buffer, this.outputFrame.pointer, 128);
+                                                    this.rateFrame = { pointer: this.wasm.exports.get_rate_pointer() };
+                                                    this.rateFrame.buffer = new Float32Array(this.wasm.exports.memory.buffer, this.rateFrame.pointer, 128);
+                                                }
+                                            
+                                                constructor(options){
+                                                    //construct class instance
+                                                        super(options);
+                                            
+                                                    //instance state
+                                                        this.shutdown = false;
+                                                        this._state = {
+                                                            nodeConstructorTime: undefined,
+                                                            temporaryAudioData: undefined,
+                                                            rate_useControl: false,
+                                                        };
+                                            
+                                                    //setup message receiver
+                                                        const self = this;
+                                                        this.port.onmessage = function(event){
+                                                            switch(event.data.command){
+                                                                //time sync
+                                                                    case 'log_nodeConstructorTime':
+                                                                        self._state.nodeConstructorTime = event.data.value;
+                                                                    break;
+                                            
+                                                                //wasm initialization
+                                                                    case 'loadWasm':
+                                                                        WebAssembly.instantiate(
+                                                                            event.data.value,
+                                                                            { env: {
+                                                                                _onEnd: function(playhead_id){ self.port.postMessage({ command:'onEnd', value:playhead_id }); },
+                                                                                _onLoop: function(playhead_id){ self.port.postMessage({ command:'onLoop', value:playhead_id }); },
+                                            
+                                                                                debug_: function(id, ...args){ console.log(id+':', args.join(' ')); },
+                                                                            } },
+                                                                        ).then(result => {
+                                                                            //save wasm processor to instance
+                                                                                self.wasm = result;
+                                            
+                                                                            //attach buffers
+                                                                                self.attachBuffers();
+                                            
+                                                                            //assemble additional wasm buffers
+                                                                                self.audioBufferShovelFrame = { pointer: self.wasm.exports.get_audio_buffer_shovel_pointer() };
+                                            
+                                                                            //load data if necessary
+                                                                                if(self._state.temporaryAudioData != undefined){
+                                                                                    self.transferAudioBufferDataIn(
+                                                                                        self._state.temporaryAudioData
+                                                                                    );
+                                                                                    self._state.temporaryAudioData = undefined;
+                                                                                }
+                                                                        });
+                                                                    break;
+                                                                
+                                                                //load data
+                                                                    case "loadAudioData":
+                                                                        if(self.wasm == undefined){
+                                                                            self._state.temporaryAudioData = event.data.value;
+                                                                        } else {
+                                                                            self.transferAudioBufferDataIn(event.data.value);
+                                                                        }
+                                            
+                                                                        self.port.postMessage({
+                                                                            command: 'loadAudioData_loadComplete', 
+                                                                            value: undefined,
+                                                                        });
+                                                                    break;
+                                            
+                                                                //performance control
+                                                                    case 'play':
+                                                                        self.wasm.exports.play();
+                                                                    break;
+                                                                    case 'stop':
+                                                                        self.wasm.exports.stop();
+                                                                    break;
+                                            
+                                                                    case 'set_loop_active':
+                                                                        self.wasm.exports.set_loop_active(event.data.value);
+                                                                    break;
+                                            
+                                                                    case 'set_playhead_position':
+                                                                        self.wasm.exports.set_playhead_position(event.data.value);
+                                                                    break;
+                                                                    case 'got_to_start':
+                                                                        self.wasm.exports.got_to_start();
+                                                                    break;
+                                                                    case 'got_to_end':
+                                                                        self.wasm.exports.got_to_end();
+                                                                    break;
+                                            
+                                                                    case 'section_start':
+                                                                        console.log("section_start:", event.data.value);
+                                                                        self.wasm.exports.section_start(event.data.value);
+                                                                    break;
+                                                                    case 'section_end':
+                                                                        console.log("section_end:", event.data.value);
+                                                                        self.wasm.exports.section_end(event.data.value);
+                                                                    break;
+                                                                    case 'maximize_section':
+                                                                        self.wasm.exports.maximize_section();
+                                                                    break;
+                                                                    case 'invert_section':
+                                                                        self.wasm.exports.invert_section();
+                                                                    break;
+                                            
+                                                                //status
+                                                                    case 'getPlayheadPosition':
+                                                                        if(event.data.value.calculateDelay){
+                                                                            const calculatedPresentTime = globalThis.currentTime*1000 + self._state.nodeConstructorTime;
+                                                                            const sendingDelay = calculatedPresentTime - event.data.sendTime;
+                                                
+                                                                            self.port.postMessage({
+                                                                                command:'getPlayheadPosition_return', 
+                                                                                value: {
+                                                                                    playheadPosition: self.playheadPositionReadout.buffer[0],
+                                                                                    sendingDelay: sendingDelay,
+                                                                                },
+                                                                                sendTime: globalThis.currentTime*1000,
+                                                                            });
+                                                                        } else {
+                                                                            self.port.postMessage({
+                                                                                command:'getPlayheadPosition_return', 
+                                                                                value: {
+                                                                                    playheadPosition: self.playheadPositionReadout.buffer[0],
+                                                                                },
+                                                                            });
+                                                                        }
+                                                                    break;
+                                            
+                                                                //use control
+                                                                    case 'rate_useControl': 
+                                                                        self._state.rate_useControl = event.data.value;
+                                                                    break;
+                                            
+                                                                //shutdown
+                                                                    case 'shutdown':
+                                                                        self.shutdown = true;
+                                                                    break;
+                                                            }
+                                                        };
+                                                }
+                                            
+                                                transferAudioBufferDataIn(audio_data){
+                                                    this.wasm.exports.clear_audio_buffer();
+                                            
+                                                    const shovelSize = this.wasm.exports.get_shovel_size();
+                                                    const block_count = (Math.floor(audio_data.length / shovelSize) + 1);
+                                                    for(let block = 0; block < block_count; block++) {
+                                                        //reattach shovel buffer 
+                                                            this.audioBufferShovelFrame.buffer = new Float32Array(
+                                                                this.wasm.exports.memory.buffer, 
+                                                                this.wasm.exports.get_audio_buffer_shovel_pointer(), 
+                                                                shovelSize
+                                                            );
+                                            
+                                                        //shovel block in
+                                                            const data_to_send = audio_data.slice( block*shovelSize, (block+1)*shovelSize );
+                                                            this.audioBufferShovelFrame.buffer.set(data_to_send);
+                                                            this.wasm.exports.shovel_audio_data_in(data_to_send.length);
+                                                    }
+                                            
+                                                    this.attachBuffers();
+                                                }
+                                            
+                                                process(inputs, outputs, parameters){
+                                                    if(this.shutdown){ return false; }
+                                                    if(this.wasm == undefined){ return true; }
+                                            
+                                                    //collect inputs/outputs
+                                                        const output = outputs[0];
+                                                        const rateControl = inputs[0];
+                                            
+                                                    //populate input buffers
+                                                        const rate_useFirstOnly = this._state.rate_useControl ? false : parameters.rate.length == 1;
+                                                        this.rateFrame.buffer.set( this._state.rate_useControl && rateControl[0] != undefined ? rateControl[0] : parameters.rate );
+                                            
+                                                    //have wasm process data, and copy results to channels
+                                                        this.wasm.exports.process(
+                                                            rate_useFirstOnly,
+                                                        );
+                                                        for(let channel = 0; channel < output.length; channel++){
+                                                            output[channel].set(this.outputFrame.buffer);
+                                                        }
+                                            
+                                                    return true;
+                                                }
+                                            }
+                                            registerProcessor('audio_buffer_type_1', audio_buffer_type_1);
+                                        `], { type: "text/javascript" }),
+                                        class:
+                                            class audio_buffer_type_1 extends AudioWorkletNode{
+                                                static wasm_url = 'wasm/audio_processing/audio_buffer_type_1.production.wasm';
+                                                // static wasm_url = 'wasm/audio_processing/audio_buffer_type_1.development.wasm';
+                                                static fetch_promise;
+                                                static compiled_wasm;
+                                            
+                                                constructor(context, options={}){
+                                                    const nodeConstructorTime = performance.now();
+                                            
+                                                    //populate options
+                                                        options.numberOfInputs = 1; //rate
+                                                        options.numberOfOutputs = 1;
+                                                        options.channelCount = 1;
+                                            
+                                                    //generate class instance
+                                                        super(context, 'audio_buffer_type_1', options);
+                                            
+                                                    //time sync
+                                                        this.nodeConstructorTime = nodeConstructorTime;
+                                                        this.port.postMessage({command:'log_nodeConstructorTime', value:this.nodeConstructorTime});
+                                            
+                                                    //load wasm processor
+                                                        audio.audioWorklet.requestWasm(audio_buffer_type_1, this);
+                                            
+                                                    //instance state
+                                                        this._state = {
+                                                            audioFileLength: undefined,
+                                                            loop: false,
+                                                            section: {
+                                                                start: 0,
+                                                                end: 1,
+                                                            },
+                                                        };
+                                                    
+                                                    //load data
+                                                        let loadAudioData_promiseResolve;
+                                                        this.loadAudioData = function(audioData){
+                                                            let maximize = this._state.section.start == 0 && this._state.section.end == this._state.audioFileLength;
+                                                            this._state.audioFileLength = audioData.length;
+                                                            if(maximize || this._state.audioFileLength < this._state.section.start && this._state.audioFileLength < this._state.section.end){
+                                                                this._state.section.start = 0;
+                                                                this._state.section.end = this._state.audioFileLength;
+                                                            }
+                                                            if(this._state.audioFileLength < this._state.section.start){ this._state.section.start = this._state.audioFileLength; }
+                                                            if(this._state.audioFileLength < this._state.section.end){ this._state.section.end = this._state.audioFileLength; }
+                                                
+                                                            this.port.postMessage({command:'loadAudioData', value:audioData});
+                                            
+                                                            return new Promise((resolve, reject) => {
+                                                                loadAudioData_promiseResolve = resolve;
+                                                            });
+                                                        };
+                                            
+                                                    //performance control
+                                                        this.play = function(){
+                                                            this.port.postMessage({command:'play', value:undefined});
+                                                        };
+                                                        this.stop = function(){
+                                                            this.port.postMessage({command:'stop', value:undefined});
+                                                        };
+                                            
+                                                        this.gotoStart = function(){
+                                                            this.port.postMessage({command:'go_to_start', value:undefined});
+                                                        };
+                                                        this.gotoEnd = function(){
+                                                            this.port.postMessage({command:'go_to_end', value:undefined});
+                                                        };
+                                            
+                                                        this.maximizeSection = function(){
+                                                            this._state.section.start = 0
+                                                            this._state.section.end = this._state.audioFileLength;
+                                                            this.port.postMessage({command:'maximize_section', value:undefined});
+                                                        };
+                                                        this.invertSection = function(){
+                                                            const tmp = this._state.section.start
+                                                            this._state.section.start = this._state.section.end;
+                                                            this._state.section.end = tmp;
+                                                            this.port.postMessage({command:'invert_section', value:undefined});
+                                                        };
+                                            
+                                                    //status
+                                                        let getPlayheadPosition_promiseResolve;
+                                                        this.getPlayheadPosition = function(calculateDelay=false){
+                                                            this.port.postMessage({
+                                                                command:'getPlayheadPosition', 
+                                                                value:{
+                                                                    calculateDelay: calculateDelay
+                                                                },
+                                                                sendTime:performance.now(),
+                                                            });
+                                                            return new Promise((resolve, reject) => {
+                                                                getPlayheadPosition_promiseResolve = resolve;
+                                                            });
+                                                        };
+                                            
+                                                    //shutdown
+                                                        this.shutdown = function(){
+                                                            this.port.postMessage({command:'shutdown', value:undefined});
+                                                            this.port.close();
+                                                        };
+                                            
+                                                    //callbacks
+                                                        this.onEnd = function(){ /*console.log('onEnd!');*/ };
+                                                        this.onLoop = function(){ /*console.log('onLoop!');*/ };
+                                            
+                                                    //setup message receiver
+                                                        const self = this;
+                                                        this.port.onmessage = function(event){
+                                                            switch(event.data.command){
+                                                                case 'onEnd': self.onEnd(event.data.value); break;
+                                                                case 'onLoop': self.onLoop(event.data.value); break;
+                                                                case 'getPlayheadPosition_return':
+                                                                    if(getPlayheadPosition_promiseResolve != undefined){
+                                                                        if(event.data.value.sendingDelay == undefined) {
+                                                                            getPlayheadPosition_promiseResolve(event.data.value.playheadPosition);
+                                                                        } else {
+                                                                            const sendingDelay = (event.data.sendTime + nodeConstructorTime) - performance.now();
+                                                                            const completeDelay = event.data.value.sendingDelay + sendingDelay;
+                                                                            getPlayheadPosition_promiseResolve({playheadPosition:event.data.value, resultDelay:completeDelay});
+                                                                        }
+                                                                        getPlayheadPosition_promiseResolve = undefined;
+                                                                    }
+                                                                break;
+                                                                case 'loadAudioData_loadComplete':
+                                                                    loadAudioData_promiseResolve();
+                                                                    loadAudioData_promiseResolve = undefined;
+                                                                break;
+                                                            }
+                                                        };
+                                                }
+                                            
+                                                get length(){
+                                                    return this._state.audioFileLength;
+                                                }
+                                                set playheadPosition(position){
+                                                    this.port.postMessage({command:'set_playhead_position', value:position});
+                                                }
+                                            
+                                                get loop(){
+                                                    return this._state.loop;
+                                                }
+                                                set loop(bool){
+                                                    this._state.loop = bool;
+                                                    this.port.postMessage({command:'set_loop_active', value:bool});
+                                                }
+                                            
+                                                get sectionStart(){
+                                                    return this._state.section.start;
+                                                }
+                                                set sectionStart(position){
+                                                    if(position > this._state.audioFileLength-1){
+                                                        console.warn("audio_buffer_type_1 - attempting to select a section start position \""+position+"\" which exceeds the audio data length \""+(this._state.audioFileLength-1)+"\". Position will be corrected");
+                                                        position = this._state.audioFileLength-1;
+                                                    }
+                                                    if(position < 0){
+                                                        console.warn("audio_buffer_type_1 - attempting to select a section start position below zero. Position will be corrected");
+                                                        position = 0;
+                                                    }
+                                            
+                                                    this._state.section.start = position;
+                                            
+                                                    this.port.postMessage({command:'section_start', value:position});
+                                                }
+                                                get sectionEnd(){
+                                                    return this._state.section.end;
+                                                }
+                                                set sectionEnd(position){
+                                                    if(position > this._state.audioFileLength-1){
+                                                        console.warn("audio_buffer_type_1 - attempting to select a section end position \""+position+"\" which exceeds the audio data length \""+(this._state.audioFileLength-1)+"\". Position will be corrected");
+                                                        position = this._state.audioFileLength-1;
+                                                    }
+                                                    if(position < 0){
+                                                        console.warn("audio_buffer_type_1 - attempting to select a section end position below zero. Position will be corrected");
+                                                        position = 0;
+                                                    }
+                                            
+                                                    this._state.section.end = position;
+                                            
+                                                    this.port.postMessage({command:'section_end', value:position});
+                                                }
+                                            
+                                                get rate(){
+                                                    return this.parameters.get('rate');
+                                                }
+                                                get rate_useControl(){
+                                                    return this._state.rate_useControl;
+                                                }
+                                                set rate_useControl(bool){
+                                                    this._state.rate_useControl = bool;
+                                                    this.port.postMessage({command:'rate_useControl', value:bool});
+                                                }
+                                            }
+                                        ,
+                                    },
                                     //single waveform output
                                     //four waveforms - sine / square / triangle / noise
                                     //frequency controlled by parameter
@@ -6591,6 +6997,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                                     //setup message receiver
                                                         const self = this;
                                                         this.port.onmessage = function(event){
+                                                            console.log('event:', event);
                                                             switch(event.data.command){
                                                                 //wasm initialization
                                                                     case 'loadWasm':
@@ -7846,365 +8253,6 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             wasm:{
                                 list:[
                                     {
-                                        name:'audioBuffer_3',
-                                        worklet:new Blob([`
-                                            class audioBuffer_3 extends AudioWorkletProcessor {
-                                                static get parameterDescriptors(){
-                                                    return [
-                                                        {
-                                                            name: 'rate',
-                                                            defaultValue: 1,
-                                                            minValue: -8,
-                                                            maxValue: 8,
-                                                            automationRate: 'a-rate',
-                                                        },
-                                                    ];
-                                                }
-                                            
-                                                attachBuffers(){
-                                                    this.positionReadout = { pointer: this.wasm.exports.get_position_readout_pointer() };
-                                                    this.positionReadout.buffer = new Uint32Array(this.wasm.exports.memory.buffer, this.positionReadout.pointer, 1);
-                                                    this.outputFrame = { pointer: this.wasm.exports.get_output_pointer() };
-                                                    this.outputFrame.buffer = new Float32Array(this.wasm.exports.memory.buffer, this.outputFrame.pointer, 128);
-                                                    this.rateFrame = { pointer: this.wasm.exports.get_rate_pointer() };
-                                                    this.rateFrame.buffer = new Float32Array(this.wasm.exports.memory.buffer, this.rateFrame.pointer, 128);
-                                                }
-                                            
-                                                constructor(options){
-                                                    //construct class instance
-                                                        super(options);
-                                            
-                                                    //instance state
-                                                        this.shutdown = false;
-                                                        this._state = {
-                                                            rate_useControl: false,
-                                                        };
-                                            
-                                                        //setup message receiver
-                                                            const self = this;
-                                                            this.port.onmessage = function(event){
-                                                                switch(event.data.command){
-                                                                    //wasm initialization
-                                                                        case 'loadWasm':
-                                                                            WebAssembly.instantiate(
-                                                                                event.data.value,
-                                                                            ).then(result => {
-                                                                                //save wasm processor to instance
-                                                                                    self.wasm = result;
-                                            
-                                                                                //attach buffers
-                                                                                    self.attachBuffers();
-                                                
-                                                                                //assemble wasm buffers
-                                                                                    self.positionReadout = { pointer: self.wasm.exports.get_position_readout_pointer() };
-                                                                                    self.outputFrame = { pointer: self.wasm.exports.get_output_pointer() };
-                                                                                    self.rateFrame = { pointer: self.wasm.exports.get_rate_pointer() };
-                                                                                    self.audioBufferShovelFrame = { pointer: self.wasm.exports.get_audio_buffer_shovel_pointer() };
-                                            
-                                                                                //test
-                                                                                    self.transferAudioBufferDataIn(
-                                                                                        new Float32Array(new Array(441).fill(1).map((_,index) => Math.sin(2*Math.PI*(index/441))))
-                                                                                    );
-                                                                            });
-                                                                        break;
-                                                                    
-                                                                    //performance control
-                                                                        case 'play':
-                                                                            self.wasm.exports.play();
-                                                                        break;
-                                                                        case 'pause':
-                                                                            self.wasm.exports.pause();
-                                                                        break;
-                                                                        case 'return':
-                                                                            self.wasm.exports.return_play_position();
-                                                                        break;
-                                                                        case 'loop':
-                                                                            self.wasm.exports.loop_active(event.data.value);
-                                                                        break;
-                                                                        case 'section_start':
-                                                                            self.wasm.exports.section_start(event.data.value);
-                                                                        break;
-                                                                        case 'section_end':
-                                                                            self.wasm.exports.section_end(event.data.value);
-                                                                        break;
-                                            
-                                                                    //status
-                                                                        case 'getPosition': 
-                                                                            console.log('worklet time:',  globalThis.currentTime*1000);
-                                                                            console.log(self.positionReadout.buffer[0]);
-                                                                        break;
-                                                                            
-                                            
-                                                                    //use control
-                                                                        case 'rate_useControl': 
-                                                                            self._state.rate_useControl = event.data.value;
-                                                                        break;
-                                            
-                                                                    //shutdown
-                                                                        case 'shutdown':
-                                                                            self.shutdown = true;
-                                                                        break;
-                                                                }
-                                                            };
-                                                }
-                                            
-                                                transferAudioBufferDataIn(audio_data){
-                                                    this.wasm.exports.clear_audio_buffer();
-                                            
-                                                    const shovelSize = this.wasm.exports.get_shovel_size();
-                                                    const block_count = (Math.floor(audio_data.length / shovelSize) + 1);
-                                                    for(let block = 0; block < block_count; block++) {
-                                                        //reattach shovel buffer 
-                                                            this.audioBufferShovelFrame.buffer = new Float32Array(
-                                                                this.wasm.exports.memory.buffer, 
-                                                                this.wasm.exports.get_audio_buffer_shovel_pointer(), 
-                                                                shovelSize
-                                                            );
-                                            
-                                                        //shovel block in
-                                                            const data_to_send = audio_data.slice( block*shovelSize, (block+1)*shovelSize );
-                                                            this.audioBufferShovelFrame.buffer.set(data_to_send);
-                                                            this.wasm.exports.shovel_audio_data_in(data_to_send.length);
-                                                    }
-                                            
-                                                    this.attachBuffers();
-                                                }
-                                            
-                                                process(inputs, outputs, parameters){
-                                                    if(this.shutdown){ return false; }
-                                                    if(this.wasm == undefined){ return true; }
-                                            
-                                                    //collect inputs/outputs
-                                                        const output = outputs[0];
-                                                        const rateControl = inputs[0];
-                                            
-                                                    //populate input buffers
-                                                        const rate_useFirstOnly = this._state.rate_useControl ? false : parameters.rate.length == 1;
-                                                        this.rateFrame.buffer.set( this._state.rate_useControl && rateControl[0] != undefined ? rateControl[0] : parameters.rate );
-                                            
-                                                    //have wasm process data, and copy results to channels
-                                                        this.wasm.exports.process(
-                                                            rate_useFirstOnly,
-                                                        );
-                                                        for(let channel = 0; channel < output.length; channel++){
-                                                            output[channel].set(this.outputFrame.buffer);
-                                                        }
-                                            
-                                                    return true;
-                                                }
-                                            }
-                                            registerProcessor('audioBuffer_3', audioBuffer_3);
-                                        `], { type: "text/javascript" }),
-                                        class:
-                                            class audioBuffer_3 extends AudioWorkletNode{
-                                                // static wasm_url = 'wasm/audio_processing/audio_buffer_3.production.wasm';
-                                                static wasm_url = 'wasm/audio_processing/audio_buffer_3.development.wasm';
-                                                static fetch_promise;
-                                                static compiled_wasm;
-                                            
-                                                constructor(context, options={}){
-                                                    //populate options
-                                                        options.numberOfInputs = 1; //rate
-                                                        options.numberOfOutputs = 1;
-                                                        options.channelCount = 1;
-                                            
-                                                    //generate class instance
-                                                        super(context, 'audioBuffer_3', options);
-                                            
-                                                    //load wasm processor
-                                                        audio.audioWorklet.requestWasm(audioBuffer_3, this);
-                                            
-                                                    //instance state
-                                                        this._state = {
-                                                            loop: false,
-                                                            section: {
-                                                                start: 0,
-                                                                end: 1,
-                                                            },
-                                                        };
-                                            
-                                                    //performance control
-                                                        this.play = function(){
-                                                            this.port.postMessage({command:'play', value:undefined});
-                                                        };
-                                                        this.pause = function(){
-                                                            this.port.postMessage({command:'pause', value:undefined});
-                                                        };
-                                                        this.return = function(){
-                                                            this.port.postMessage({command:'return', value:undefined});
-                                                        };
-                                            
-                                                    //status
-                                                        this.getPosition = function(){
-                                                            console.log('node time:',  performance.now());
-                                                            this.port.postMessage({command:'getPosition', value:undefined});
-                                                        };
-                                            
-                                                    //shutdown
-                                                        this.shutdown = function(){
-                                                            this.port.postMessage({command:'shutdown', value:undefined});
-                                                            this.port.close();
-                                                        };
-                                                }
-                                            
-                                                get loop(){
-                                                    return this._state.loop;
-                                                }
-                                                set loop(bool){
-                                                    this._state.loop = bool;
-                                                    this.port.postMessage({command:'loop', value:bool});
-                                                }
-                                            
-                                                get section_start(){
-                                                    return this._state.section.start;
-                                                }
-                                                set section_start(position){
-                                                    this._state.section.start = position;
-                                                    this.port.postMessage({command:'section_start', value:position});
-                                                }
-                                                get section_end(){
-                                                    return this._state.section.end;
-                                                }
-                                                set section_end(position){
-                                                    this._state.section.end = position;
-                                                    this.port.postMessage({command:'section_end', value:position});
-                                                }
-                                            
-                                                get rate(){
-                                                    return this.parameters.get('rate');
-                                                }
-                                                get rate_useControl(){
-                                                    return this._state.rate_useControl;
-                                                }
-                                                set rate_useControl(bool){
-                                                    this._state.rate_useControl = bool;
-                                                    this.port.postMessage({command:'rate_useControl', value:bool});
-                                                }
-                                            }
-                                        ,
-                                    },
-                                    {
-                                        name:'audioBuffer_2',
-                                        worklet:new Blob([`
-                                            const debug = function(id, ...args){ console.log(id+':', args.join(' ')); };
-                                            
-                                            class audioBuffer_2 extends AudioWorkletProcessor{
-                                                static get parameterDescriptors(){
-                                                    return [{
-                                                            name: 'samples',
-                                                            defaultValue: 1,
-                                                            minValue: 1,
-                                                            maxValue: 100,
-                                                            automationRate: 'k-rate',
-                                                        }
-                                                    ];
-                                                }
-                                            
-                                                constructor(options){
-                                                    //construct class instance
-                                                        super(options);
-                                            
-                                                    //instance state
-                                                        this.shutdown = false;
-                                            
-                                                    //setup message receiver
-                                                        const self = this;
-                                                        this.port.onmessage = function(event){
-                                                            switch(event.data.command){
-                                                                //wasm initialization
-                                                                    case 'loadWasm':
-                                                                        WebAssembly.instantiate(
-                                                                            event.data.value,
-                                                                            // { env: { Math_random: Math.random, debug_: debug, } },
-                                                                        ).then(result => {
-                                                                            self.wasm = result;
-                                            
-                                                                            self.outputFrame = {};
-                                                                            self.audioBufferShovelFrame = {};
-                                            
-                                                                            self.attachBuffers();
-                                            
-                                                                            self.transferAudioBufferData(
-                                                                                new Float32Array(new Array(440).fill(1).map((_,index) => Math.sin(2*Math.PI*(index/440))))
-                                                                            );
-                                                                        });
-                                                                    break;
-                                                                
-                                                                //shutdown
-                                                                    case 'shutdown':
-                                                                        self.shutdown = true;
-                                                                    break;
-                                                            }
-                                                        };
-                                                }
-                                            
-                                                transferAudioBufferData(audio_data){
-                                                    const shovelSize = this.wasm.exports.get_shovel_size();
-                                            
-                                                    this.wasm.exports.clear_audio_buffer();
-                                                    for(let block = 0; block < (Math.floor(audio_data.length / shovelSize) + 1); block++) {
-                                                        const data_to_send = audio_data.slice( block*shovelSize, (block+1)*shovelSize );
-                                            
-                                                        this.audioBufferShovelFrame.buffer = new Float32Array(this.wasm.exports.memory.buffer, this.wasm.exports.get_audio_buffer_shovel_pointer(), shovelSize);
-                                                        this.audioBufferShovelFrame.buffer.set(data_to_send);
-                                            
-                                                        this.wasm.exports.shovel_audio_data_in(data_to_send.length);
-                                                    }
-                                            
-                                                    this.attachBuffers();
-                                                }
-                                                attachBuffers(){
-                                                    this.outputFrame.pointer = this.wasm.exports.get_output_pointer();
-                                                    this.outputFrame.buffer = new Float32Array(this.wasm.exports.memory.buffer, this.outputFrame.pointer, 128);
-                                                }
-                                            
-                                                process(inputs, outputs, parameters){
-                                                    if(this.shutdown){ return false; }
-                                                    if(this.wasm == undefined){ return true; }
-                                            
-                                                    //collect inputs/outputs
-                                                        const output = outputs[0];
-                                            
-                                                    //copy data in, process data, and copy results to channels
-                                                        this.wasm.exports.process();
-                                                        for(let channel = 0; channel < output.length; channel++){
-                                                            output[channel].set(this.outputFrame.buffer);
-                                                        }
-                                            
-                                                    return true;
-                                                }
-                                            }
-                                            registerProcessor('audioBuffer_2', audioBuffer_2);
-                                        `], { type: "text/javascript" }),
-                                        class:
-                                            class audioBuffer_2 extends AudioWorkletNode{
-                                                // static wasm_url = 'wasm/audio_processing/audio_buffer_2.production.wasm';
-                                                static wasm_url = 'wasm/audio_processing/audio_buffer_2.development.wasm';
-                                                static fetch_promise;
-                                                static compiled_wasm;
-                                            
-                                                constructor(context, options={}){
-                                                    //populate options
-                                                        options.numberOfInputs = 0;
-                                                        options.numberOfOutputs = 1;
-                                                        options.channelCount = 1;
-                                            
-                                                    //generate class instance
-                                                        super(context, 'audioBuffer_2', options);
-                                            
-                                                    //load wasm processor
-                                                        audio.audioWorklet.requestWasm(audioBuffer_2, this);
-                                            
-                                                    //shutdown
-                                                        this.shutdown = function(){
-                                                            this.port.postMessage({command:'shutdown', value:undefined});
-                                                            this.port.close();
-                                                        };
-                                                }
-                                            }
-                                        ,
-                                    },
-                                    {
                                         name:'squareWaveGenerator_wasm',
                                         worklet:new Blob([`
                                             class squareWaveGenerator_wasm extends AudioWorkletProcessor{
@@ -8308,58 +8356,162 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                         ,
                                     },
                                     {
-                                        name:'audioBuffer_1',
+                                        name:'audio_buffer_type_2',
                                         worklet:new Blob([`
-                                            const debug = function(id, ...args){ console.log(id+':', args.join(' ')); };
-                                            
-                                            class audioBuffer_1 extends AudioWorkletProcessor{
+                                            class audio_buffer_type_2 extends AudioWorkletProcessor {
                                                 static get parameterDescriptors(){
                                                     return [
                                                         {
                                                             name: 'rate',
                                                             defaultValue: 1,
-                                                            minValue: -16,
-                                                            maxValue: 16,
+                                                            minValue: -8,
+                                                            maxValue: 8,
                                                             automationRate: 'a-rate',
-                                                        }
+                                                        },
                                                     ];
                                                 }
-                                                
+                                            
+                                                attachBuffers(){
+                                                    this.playheadPositionReadout = { pointer: this.wasm.exports.get_playhead_position_readout_pointer() };
+                                                    this.playheadPositionReadout.buffer = new Uint32Array(this.wasm.exports.memory.buffer, this.playheadPositionReadout.pointer, 256);
+                                                    this.outputFrame = { pointer: this.wasm.exports.get_output_pointer() };
+                                                    this.outputFrame.buffer = new Float32Array(this.wasm.exports.memory.buffer, this.outputFrame.pointer, 128);
+                                                    this.rateFrame = { pointer: this.wasm.exports.get_rate_pointer() };
+                                                    this.rateFrame.buffer = new Float32Array(this.wasm.exports.memory.buffer, this.rateFrame.pointer, 128);
+                                                }
+                                            
                                                 constructor(options){
                                                     //construct class instance
                                                         super(options);
                                             
                                                     //instance state
                                                         this.shutdown = false;
+                                                        this._state = {
+                                                            nodeConstructorTime: undefined,
+                                                            temporaryAudioData: undefined,
+                                                            rate_useControl: false,
+                                                        };
                                             
                                                     //setup message receiver
                                                         const self = this;
                                                         this.port.onmessage = function(event){
+                                                            console.log(event.data);
                                                             switch(event.data.command){
+                                                                //time sync
+                                                                    case 'log_nodeConstructorTime':
+                                                                        self._state.nodeConstructorTime = event.data.value;
+                                                                    break;
+                                            
                                                                 //wasm initialization
                                                                     case 'loadWasm':
                                                                         WebAssembly.instantiate(
                                                                             event.data.value,
-                                                                            { env: { Math_random: Math.random, debug_: debug, } },
+                                                                            { env: {
+                                                                                _onEnd: function(playhead_id){ self.port.postMessage({ command:'onEnd', value:playhead_id }); },
+                                                                                _onLoop: function(playhead_id){ self.port.postMessage({ command:'onLoop', value:playhead_id }); },
+                                            
+                                                                                debug_: function(id, ...args){ console.log(id+':', args.join(' ')); },
+                                                                            } },
                                                                         ).then(result => {
-                                                                            self.wasm = result;
+                                                                            //save wasm processor to instance
+                                                                                self.wasm = result;
                                             
-                                                                            self.outputFrame = {};
-                                                                            self.outputFrame.pointer = self.wasm.exports.get_output_pointer();
-                                                                            self.outputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.outputFrame.pointer, 128);
+                                                                            //attach buffers
+                                                                                self.attachBuffers();
                                             
-                                                                            self.audioDataShovelFrame = {};
-                                                                            self.audioDataShovelFrame.pointer = self.wasm.exports.get_audio_data_shovel_pointer();
-                                                                            self.audioDataShovelFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.audioDataShovelFrame.pointer, 128);
+                                                                            //assemble additional wasm buffers
+                                                                                self.audioBufferShovelFrame = { pointer: self.wasm.exports.get_audio_buffer_shovel_pointer() };
                                             
-                                                                            self.rateFrame = {};
-                                                                            self.rateFrame.pointer = self.wasm.exports.get_rate_pointer();
-                                                                            self.rateFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.rateFrame.pointer, 128);
-                                            
-                                                                            self.transfer_audio_buffer_data(new Float32Array([1.0,2.0,3.0]));
+                                                                            //load data if necessary
+                                                                                if(self._state.temporaryAudioData != undefined){
+                                                                                    self.transferAudioBufferDataIn(
+                                                                                        self._state.temporaryAudioData
+                                                                                    );
+                                                                                    self._state.temporaryAudioData = undefined;
+                                                                                }
                                                                         });
                                                                     break;
                                                                 
+                                                                //load data
+                                                                    case "loadAudioData":
+                                                                        if(self.wasm == undefined){
+                                                                            self._state.temporaryAudioData = event.data.value;
+                                                                        } else {
+                                                                            self.transferAudioBufferDataIn(event.data.value);
+                                                                        }
+                                            
+                                                                        self.port.postMessage({
+                                                                            command: 'loadAudioData_loadComplete', 
+                                                                            value: undefined,
+                                                                        });
+                                                                    break;
+                                            
+                                                                //performance control
+                                                                    case 'play':
+                                                                        self.wasm.exports.play(event.data.value.playhead_id!=undefined, event.data.value.playhead_id);
+                                                                    break;
+                                                                    case 'stop':
+                                                                        self.wasm.exports.stop(event.data.value.playhead_id!=undefined, event.data.value.playhead_id);
+                                                                    break;
+                                            
+                                                                    case 'set_loop_active':
+                                                                        self.wasm.exports.set_loop_active(event.data.value.playhead_id!=undefined, event.data.value.playhead_id, event.data.value.loop_active);
+                                                                    break;
+                                            
+                                                                    case 'set_playhead_position':
+                                                                        self.wasm.exports.set_playhead_position(event.data.value.playhead_id!=undefined, event.data.value.playhead_id, event.data.value.position);
+                                                                    break;
+                                                                    case 'got_to_start':
+                                                                        self.wasm.exports.got_to_start(event.data.value.playhead_id!=undefined, event.data.value.playhead_id);
+                                                                    break;
+                                                                    case 'got_to_end':
+                                                                        self.wasm.exports.got_to_end(event.data.value.playhead_id!=undefined, event.data.value.playhead_id);
+                                                                    break;
+                                            
+                                                                    case 'section_start':
+                                                                        self.wasm.exports.section_start(event.data.value.playhead_id!=undefined, event.data.value.playhead_id, event.data.value.position);
+                                                                    break;
+                                                                    case 'section_end':
+                                                                        self.wasm.exports.section_end(event.data.value.playhead_id!=undefined, event.data.value.playhead_id, event.data.value.position);
+                                                                    break;
+                                                                    case 'maximize_section':
+                                                                        self.wasm.exports.maximize_section(event.data.value.playhead_id!=undefined, event.data.value.playhead_id);
+                                                                    break;
+                                                                    case 'invert_section':
+                                                                        self.wasm.exports.invert_section(event.data.value.playhead_id!=undefined, event.data.value.playhead_id);
+                                                                    break;
+                                            
+                                                                //status
+                                                                    case 'getPlayheadPosition':
+                                                                        if(event.data.value.calculateDelay){
+                                                                            const calculatedPresentTime = globalThis.currentTime*1000 + self._state.nodeConstructorTime;
+                                                                            const sendingDelay = calculatedPresentTime - event.data.sendTime;
+                                                
+                                                                            self.port.postMessage({
+                                                                                command:'getPlayheadPosition_return', 
+                                                                                value: {
+                                                                                    playhead_id: event.data.value.playhead_id,
+                                                                                    playheadPosition: self.playheadPositionReadout.buffer[event.data.value.playhead_id],
+                                                                                    sendingDelay: sendingDelay,
+                                                                                },
+                                                                                sendTime: globalThis.currentTime*1000,
+                                                                            });
+                                                                        } else {
+                                                                            self.port.postMessage({
+                                                                                command:'getPlayheadPosition_return', 
+                                                                                value: {
+                                                                                    playhead_id: event.data.value.playhead_id,
+                                                                                    playheadPosition: self.playheadPositionReadout.buffer[event.data.value.playhead_id],
+                                                                                },
+                                                                            });
+                                                                        }
+                                                                    break;
+                                            
+                                                                //use control
+                                                                    case 'rate_useControl': 
+                                                                        self._state.rate_useControl = event.data.value;
+                                                                    break;
+                                            
                                                                 //shutdown
                                                                     case 'shutdown':
                                                                         self.shutdown = true;
@@ -8368,10 +8520,26 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                                         };
                                                 }
                                             
-                                                transfer_audio_buffer_data(data){
-                                                    const data_to_send = data.slice(0,128);
-                                                    this.audioDataShovelFrame.buffer.set(data_to_send);
-                                                    this.wasm.exports.shovel_load_audio_data(data_to_send.length);
+                                                transferAudioBufferDataIn(audio_data){
+                                                    this.wasm.exports.clear_audio_buffer();
+                                            
+                                                    const shovelSize = this.wasm.exports.get_shovel_size();
+                                                    const block_count = (Math.floor(audio_data.length / shovelSize) + 1);
+                                                    for(let block = 0; block < block_count; block++) {
+                                                        //reattach shovel buffer 
+                                                            this.audioBufferShovelFrame.buffer = new Float32Array(
+                                                                this.wasm.exports.memory.buffer, 
+                                                                this.wasm.exports.get_audio_buffer_shovel_pointer(), 
+                                                                shovelSize
+                                                            );
+                                            
+                                                        //shovel block in
+                                                            const data_to_send = audio_data.slice( block*shovelSize, (block+1)*shovelSize );
+                                                            this.audioBufferShovelFrame.buffer.set(data_to_send);
+                                                            this.wasm.exports.shovel_audio_data_in(data_to_send.length);
+                                                    }
+                                            
+                                                    this.attachBuffers();
                                                 }
                                             
                                                 process(inputs, outputs, parameters){
@@ -8380,56 +8548,267 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                             
                                                     //collect inputs/outputs
                                                         const output = outputs[0];
-                                            
-                                                    //pre-calculations
-                                                        const rate_useFirstOnly = parameters.rate.length == 1;
+                                                        const rateControl = inputs[0];
                                             
                                                     //populate input buffers
-                                                        this.rateFrame.buffer.set( rate_useFirstOnly ? [parameters.rate[0]] : parameters.rate );
+                                                        const rate_useFirstOnly = this._state.rate_useControl ? false : parameters.rate.length == 1;
+                                                        this.rateFrame.buffer.set( this._state.rate_useControl && rateControl[0] != undefined ? rateControl[0] : parameters.rate );
                                             
-                                                    //process data, and copy results to channels
+                                                    //have wasm process data, and copy results to channels
                                                         this.wasm.exports.process(
                                                             rate_useFirstOnly,
                                                         );
-                                                        output[0].set(this.outputFrame.buffer);
-                                            
+                                                        for(let channel = 0; channel < output.length; channel++){
+                                                            output[channel].set(this.outputFrame.buffer);
+                                                        }
                                             
                                                     return true;
                                                 }
                                             }
-                                            registerProcessor('audioBuffer_1', audioBuffer_1);
+                                            registerProcessor('audio_buffer_type_2', audio_buffer_type_2);
                                         `], { type: "text/javascript" }),
                                         class:
-                                            class audioBuffer_1 extends AudioWorkletNode{
-                                                // static wasm_url = 'wasm/audio_processing/audio_buffer.production.wasm';
-                                                static wasm_url = 'wasm/audio_processing/audio_buffer.development.wasm';
+                                            class audio_buffer_type_2 extends AudioWorkletNode{
+                                                // static wasm_url = 'wasm/audio_processing/audio_buffer_type_2.production.wasm';
+                                                static wasm_url = 'wasm/audio_processing/audio_buffer_type_2.development.wasm';
                                                 static fetch_promise;
                                                 static compiled_wasm;
                                             
                                                 constructor(context, options={}){
+                                                    const nodeConstructorTime = performance.now();
+                                            
                                                     //populate options
-                                                        options.numberOfInputs = 1;
+                                                        options.numberOfInputs = 1; //rate
                                                         options.numberOfOutputs = 1;
-                                                        options.channelCount = 2;
+                                                        options.channelCount = 1;
                                             
                                                     //generate class instance
-                                                        super(context, 'audioBuffer', options);
+                                                        super(context, 'audio_buffer_type_2', options);
+                                            
+                                                    //time sync
+                                                        this.nodeConstructorTime = nodeConstructorTime;
+                                                        this.port.postMessage({command:'log_nodeConstructorTime', value:this.nodeConstructorTime});
                                             
                                                     //load wasm processor
-                                                        audio.audioWorklet.requestWasm(audioBuffer, this);
+                                                        audio.audioWorklet.requestWasm(audio_buffer_type_2, this);
                                             
                                                     //instance state
-                                                        this._state = {};
+                                                        this._state = {
+                                                            audioFileLength: undefined,
+                                                            loop: [],
+                                                            section: [],
+                                                        };
+                                                    
+                                                    //load data
+                                                        let loadAudioData_promiseResolve;
+                                                        this.loadAudioData = function(audioData){
+                                                            let maximize = this._state.section.start == 0 && this._state.section.end == this._state.audioFileLength;
+                                                            this._state.audioFileLength = audioData.length;
+                                                            if(maximize || this._state.audioFileLength < this._state.section.start && this._state.audioFileLength < this._state.section.end){
+                                                                this._state.section.start = 0;
+                                                                this._state.section.end = this._state.audioFileLength;
+                                                            }
+                                                            if(this._state.audioFileLength < this._state.section.start){ this._state.section.start = this._state.audioFileLength; }
+                                                            if(this._state.audioFileLength < this._state.section.end){ this._state.section.end = this._state.audioFileLength; }
+                                                
+                                                            this.port.postMessage({command:'loadAudioData', value:audioData});
+                                            
+                                                            return new Promise((resolve, reject) => {
+                                                                loadAudioData_promiseResolve = resolve;
+                                                            });
+                                                        };
+                                            
+                                                    //performance control
+                                                        this.play = function(playheadId){
+                                                            this.port.postMessage({command:'play', value:{playhead_id:playheadId}});
+                                                        };
+                                                        this.stop = function(playheadId){
+                                                            this.port.postMessage({command:'stop', value:{playhead_id:playheadId}});
+                                                        };
+                                            
+                                                        this.loop = function(playheadId, active){
+                                                            if(playheadId == undefined && active == undefined){
+                                                                return this._state.loop;
+                                                            }else if(active == undefined){
+                                                                return this._state.loop[playheadId];
+                                                            }
+                                            
+                                                            if(playheadId == undefined){
+                                                                this._state.loop = this._state.loop.map(() => active);
+                                                            } else {
+                                                                this._state.loop[playheadId] = active;
+                                                            }
+                                            
+                                                            this.port.postMessage({command:'set_loop_active', value:{playhead_id:playheadId, loop_active:active}});
+                                                        };
+                                                        this.setPlayheadPosition = function(playheadId, position){
+                                                            if(position == undefined){
+                                                                console.error('audio_buffer_type_2.set_playhead_position - position undefined');
+                                                                return;
+                                                            }
+                                            
+                                                            this.port.postMessage({command:'set_playhead_position', value:{playhead_id:playheadId, position:position}});
+                                                        };
+                                            
+                                                        this.gotoStart = function(playheadId){
+                                                            this.port.postMessage({command:'go_to_start', value:{playhead_id:playheadId}});
+                                                        };
+                                                        this.gotoEnd = function(playheadId){
+                                                            this.port.postMessage({command:'go_to_end', value:{playhead_id:playheadId}});
+                                                        };
+                                            
+                                                        this.sectionStart = function(playheadId, position){
+                                                            if(position > this._state.audioFileLength-1){
+                                                                console.warn("audio_buffer_type_2.section_start - attempting to select a section start position \""+position+"\" which exceeds the audio data length \""+(this._state.audioFileLength-1)+"\". Position will be corrected");
+                                                                position = this._state.audioFileLength-1;
+                                                            }
+                                                            if(position < 0){
+                                                                console.warn("audio_buffer_type_2.section_start - attempting to select a section start position below zero. Position will be corrected");
+                                                                position = 0;
+                                                            }
+                                            
+                                                            if(playheadId == undefined){
+                                                                for(let a = 0; a < this._state.section.length; a++){
+                                                                    this._state.section[a].start = position;
+                                                                }
+                                                            } else {
+                                                                if(this._state.section[playheadId] == undefined) {
+                                                                    this._state.section[playheadId] = {
+                                                                        start: position,
+                                                                        end: this._state.audioFileLength-1
+                                                                    };
+                                                                }
+                                                                this._state.section[playheadId].start = position;
+                                                            }
+                                            
+                                                            this.port.postMessage({command:'section_start', value:{playhead_id:playheadId, position:position}});
+                                                        };
+                                                        this.sectionEnd = function(playheadId, position){
+                                                            if(position > this._state.audioFileLength-1){
+                                                                console.warn("audio_buffer_type_2.section_end - attempting to select a section end position \""+position+"\" which exceeds the audio data length \""+(this._state.audioFileLength-1)+"\". Position will be corrected");
+                                                                position = this._state.audioFileLength-1;
+                                                            }
+                                                            if(position < 0){
+                                                                console.warn("audio_buffer_type_2.section_end - attempting to select a section end position below zero. Position will be corrected");
+                                                                position = 0;
+                                                            }
+                                            
+                                                            if(playheadId == undefined){
+                                                                for(let a = 0; a < this._state.section.length; a++){
+                                                                    this._state.section[a].end = position;
+                                                                }
+                                                            } else {
+                                                                if(this._state.section[playheadId] == undefined) {
+                                                                    this._state.section[playheadId] = {
+                                                                        start: 0,
+                                                                        end: position
+                                                                    };
+                                                                }
+                                                                this._state.section[playheadId].end = position;
+                                                            }
+                                            
+                                                            this.port.postMessage({command:'section_end', value:{playhead_id:playheadId, position:position}});
+                                                        };
+                                            
+                                                        this.maximizeSection = function(playheadId){
+                                                            if(playheadId == undefined){
+                                                                for(let a = 0; a < this._state.section.length; a++){
+                                                                    this._state.section[a].start = 0;
+                                                                    this._state.section[a].end = this._state.audioFileLength;
+                                                                }
+                                                            } else {
+                                                                this._state.section[playheadId].start = 0;
+                                                                this._state.section[playheadId].end = this._state.audioFileLength;
+                                                            }
+                                            
+                                                            this.port.postMessage({command:'maximize_section', value:{playhead_id:playheadId}});
+                                                        };
+                                                        this.invertSection = function(playheadId){
+                                                            if(playheadId == undefined){
+                                                                for(let a = 0; a < this._state.section.length; a++){
+                                                                    const tmp = this._state.section[a].start
+                                                                    this._state.section[a].start = this._state.section[a].end;
+                                                                    this._state.section[a].end = tmp;
+                                                                }
+                                                            } else {
+                                                                const tmp = this._state.section[playheadId].start
+                                                                this._state.section[playheadId].start = this._state.section[playheadId].end;
+                                                                this._state.section[playheadId].end = tmp;
+                                                            }
+                                            
+                                                            this.port.postMessage({command:'invert_section', value:{playhead_id:playheadId}});
+                                                        };
+                                            
+                                                    //status
+                                                        let getPlayheadPosition_promiseResolve = [];
+                                                        this.getPlayheadPosition = function(playheadId, calculateDelay=false){
+                                                            if(typeof playheadId != "number"){
+                                                                console.error('audio_buffer_type_2.getPlayheadPosition - playheadId not a number');
+                                                                return;
+                                                            }
+                                            
+                                                            this.port.postMessage({
+                                                                command:'getPlayheadPosition', 
+                                                                value:{
+                                                                    playhead_id: playheadId,
+                                                                    calculateDelay: calculateDelay
+                                                                },
+                                                                sendTime:performance.now(),
+                                                            });
+                                                            return new Promise((resolve, reject) => {
+                                                                getPlayheadPosition_promiseResolve[playheadId] = resolve;
+                                                            });
+                                                        };
                                             
                                                     //shutdown
                                                         this.shutdown = function(){
                                                             this.port.postMessage({command:'shutdown', value:undefined});
                                                             this.port.close();
                                                         };
+                                            
+                                                    //callbacks
+                                                        this.onEnd = function(){ /*console.log('onEnd!');*/ };
+                                                        this.onLoop = function(){ /*console.log('onLoop!');*/ };
+                                            
+                                                    //setup message receiver
+                                                        const self = this;
+                                                        this.port.onmessage = function(event){
+                                                            switch(event.data.command){
+                                                                case 'onEnd': self.onEnd(event.data.value); break;
+                                                                case 'onLoop': self.onLoop(event.data.value); break;
+                                                                case 'getPlayheadPosition_return':
+                                                                    if(getPlayheadPosition_promiseResolve[event.data.value.playhead_id] != undefined){
+                                                                        if(event.data.value.sendingDelay == undefined) {
+                                                                            getPlayheadPosition_promiseResolve[event.data.value.playhead_id](event.data.value.playheadPosition);
+                                                                        } else {
+                                                                            const sendingDelay = (event.data.sendTime + nodeConstructorTime) - performance.now();
+                                                                            const completeDelay = event.data.value.sendingDelay + sendingDelay;
+                                                                            getPlayheadPosition_promiseResolve[event.data.value.playhead_id]({playheadPosition:event.data.value, resultDelay:completeDelay});
+                                                                        }
+                                                                        getPlayheadPosition_promiseResolve[event.data.value.playhead_id] = undefined;
+                                                                    }
+                                                                break;
+                                                                case 'loadAudioData_loadComplete':
+                                                                    loadAudioData_promiseResolve();
+                                                                    loadAudioData_promiseResolve = undefined;
+                                                                break;
+                                                            }
+                                                        };
+                                                }
+                                            
+                                                get length(){
+                                                    return this._state.audioFileLength;
                                                 }
                                             
                                                 get rate(){
                                                     return this.parameters.get('rate');
+                                                }
+                                                get rate_useControl(){
+                                                    return this._state.rate_useControl;
+                                                }
+                                                set rate_useControl(bool){
+                                                    this._state.rate_useControl = bool;
+                                                    this.port.postMessage({command:'rate_useControl', value:bool});
                                                 }
                                             }
                                         ,
@@ -25664,18 +26043,6 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         // {{include:audioProcessing/audioWorket/7 - squareWaveGenerator.js}} //squareWaveGenerator
                     //workshop - wasm
                         // {{include:audioProcessing/audioWorket/10 - squareWaveGenerator.js}} //squareWaveGenerator with wasm processor
-                        ab_1 = new _canvas_.library.audio.audioWorklet.workshop.wasm.audioBuffer_3(_canvas_.library.audio.context);
-                        gain_1 = new _canvas_.library.audio.audioWorklet.production.wasm.gain(_canvas_.library.audio.context);
-                        ab_1.connect(gain_1).connect(_canvas_.library.audio.context.destination);
-                        gain_1.gain.setValueAtTime(0.05,0);
-                        
-                        _canvas_.library.audio.loadAudioFile(result => {
-                            console.log(result.buffer);
-                            const data = result.buffer.getChannelData(0);
-                            console.log(data);
-                        
-                        
-                        }, 'url', '/sounds/78/bass_1.wav', undefined, undefined);
                     //production - only_js
                         // {{include:audioProcessing/audioWorket/2 - amplitudeModifier.js}} //amplitudeModifier
                         // {{include:audioProcessing/audioWorket/4 - momentaryAmplitudeMeter.js}} //momentaryAmplitudeMeter
@@ -25683,10 +26050,21 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         // {{include:audioProcessing/audioWorket/8 - lagProcessor.js}} //lagProcessor
                         // {{include:audioProcessing/audioWorket/9 - oscillator.js}} //oscillator
                     //production - wasm
-                        // {{include:audioProcessing/audioWorket/11 - bitcrusher.js}} //bitcrusher with wasm processor
+                        const osc = new OscillatorNode(_canvas_.library.audio.context);
+                        const BC = new _canvas_.library.audio.audioWorklet.production.wasm.bitcrusher(_canvas_.library.audio.context);
+                        const BC2 = new _canvas_.library.audio.audioWorklet.production.wasm.bitcrusher(_canvas_.library.audio.context);
+                        
+                        BC.amplitudeResolution = 10;
+                        BC.sampleFrequency = 16;
+                        
+                        osc.connect(BC).connect(_canvas_.library.audio.context.destination);
+                        
+                        osc.frequency.setTargetAtTime(440, _canvas_.library.audio.context.currentTime, 0);
+                        osc.start();
                         // {{include:audioProcessing/audioWorket/12 - oscillator_type_1.js}} //simplistic sine-wave oscillator, edition 1
                         // {{include:audioProcessing/audioWorket/3 - sigmoid.js}} //sigmoid with wasm processor
                         // {{include:audioProcessing/audioWorket/13 - integrated_synthesizer_type_1.js}} //a synthesizer in an audio node
+                        // {{include:audioProcessing/audioWorket/14 - custom audio_buffer.js}} 
         
                 // {{include:audioProcessing/1.js}} //frequency/amplitude measure rig
         

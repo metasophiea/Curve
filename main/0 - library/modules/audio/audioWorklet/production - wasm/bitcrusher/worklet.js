@@ -27,6 +27,7 @@ class bitcrusher extends AudioWorkletProcessor {
         //setup message receiver
             const self = this;
             this.port.onmessage = function(event){
+                console.log('event:', event);
                 switch(event.data.command){
                     //wasm initialization
                         case 'loadWasm':

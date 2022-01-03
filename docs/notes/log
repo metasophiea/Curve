@@ -1,4 +1,12 @@
 ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2021-06-24
+  - began work on audio_buffer_type_2, which has multiple playheads
+
+
+2021-06-22
+  - finished off and moved audio_buffer_type_1 from workshop into production
+
+
 2021-06-02
   - moved integrated_synthesizer_type_1 from workshop into production
 

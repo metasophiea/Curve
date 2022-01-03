@@ -27,6 +27,21 @@
                 display: inline-block;
                 padding: 10px;
             }
+            .centred-image {
+                display: block;
+                margin-left: auto;
+                margin-right: auto;
+            }
+            .caption {
+                text-align: center;
+                font-size: small;
+                font-style: italic;
+                color: #aaaaaa;
+            }
+            .broken-link {
+                pointer-events: none;
+                color: #aaaaaa;
+            }
         </style>
     </head>
 
@@ -39,6 +54,20 @@
         <p>I don't know how to do signing yet, so, your anti-virus is not going to be super happy about any of this.</p>
 
         <div id="cards">
+
+            <div class="card">
+                <h2>Character Test Using DEfault Fonts</h2>
+                <p>2021-08-10 - Made with draft 19 of the project, this test shows the all the characters of the two default fonts; "Default Thick" and "Default Thin". Additionally I've added some simple mouse interaction, so that the characters will change colour when you mouse over them.</p>
+                <p>These two fonts are baked-in to the program. I plan to add more, fancier fonts; but those will be loaded from external font files - requiring an amount of processing. The default fonts require no processing so can be used in the place of fonts that haven't yet loaded.</p>
+                <img style="width: 100%;" src="/next/images/default_fonts_characters.png"></img>
+                <p>Fun fact: I designed these two default fonts by hand for the website, using some graph paper and a graphing program. I started with just "Default Thick" (at the time, only known as "Default") but after finishing I realised that it was pretty ugly, so I created "Default Thin" which was slightly better. Not long after I added external fonts, much to the relief to those blessed with the gift of sight.</p>
+                <img class="centred-image" style="width: 60%; " src="/next/images/early characters.jpg"></img>
+                <p class="caption">I only drew characters that I was having trouble with. I think they look better on paper</p>
+                <h3>Downloads</h3>
+                <p><a href="/next/apps/default_fonts/macos/11.5/default_fonts.zip">MacOS 11.5</a></p>
+                <p><a href="/next/apps/default_fonts/macos/10.11/default_fonts.zip">MacOS 10.11</a></p>
+                <p><a class="broken-link" href="/next/apps/default_fonts/windows10/default_fonts.zip">Windows 10</a></p>
+            </div>
 
             <div class="card">
                 <h2>Element Test - Plus Automatic Image Update</h2>
