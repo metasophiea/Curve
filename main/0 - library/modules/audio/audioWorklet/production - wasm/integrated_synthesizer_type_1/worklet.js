@@ -46,8 +46,33 @@ class integrated_synthesizer_type_1 extends AudioWorkletProcessor {
             //setup message receiver
                 const self = this;
                 this.port.onmessage = function(event){
+                    // console.log(event);
                     switch(event.data.command){
                         //wasm initialization
+                            case 'loadUncompiledWasm':
+                                WebAssembly.compile(event.data.value).then(module => {
+                                    WebAssembly.instantiate(
+                                        module,
+                                        { env: { Math_random: Math.random, debug_: debug, } },
+                                    ).then(result => {
+                                        //save wasm processor to instance
+                                            self.wasm = result;
+        
+                                        //assemble wasm buffers
+                                            self.gainFrame = { pointer: self.wasm.exports.get_gain_pointer() };
+                                            self.gainFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.gainFrame.pointer, 128);
+                                            self.detuneFrame = { pointer: self.wasm.exports.get_detune_pointer() };
+                                            self.detuneFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.detuneFrame.pointer, 128);
+                                            self.dutyCycleFrame = { pointer: self.wasm.exports.get_duty_cycle_pointer() };
+                                            self.dutyCycleFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.dutyCycleFrame.pointer, 128);
+                                            self.outputFrame = { pointer: self.wasm.exports.get_output_pointer() };
+                                            self.outputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.outputFrame.pointer, 128);
+        
+                                        //re-send waveform selection (just incase)
+                                            self.wasm.exports.select_waveform(self._state.selected_waveform);
+                                    });
+                                });
+                            break;
                             case 'loadWasm':
                                 WebAssembly.instantiate(
                                     event.data.value,
@@ -117,12 +142,15 @@ class integrated_synthesizer_type_1 extends AudioWorkletProcessor {
 
         //populate input buffers
             const gain_useFirstOnly = this._state.gain_useControl ? false : parameters.gain.length == 1;
+            this.gainFrame.buffer = new Float32Array(this.wasm.exports.memory.buffer, this.gainFrame.pointer, 128);
             this.gainFrame.buffer.set( this._state.gain_useControl && gainControl[0] != undefined ? gainControl[0] : parameters.gain );
 
             const detune_useFirstOnly = this._state.detune_useControl ? false : parameters.detune.length == 1;
+            this.detuneFrame.buffer = new Float32Array(this.wasm.exports.memory.buffer, this.detuneFrame.pointer, 128);
             this.detuneFrame.buffer.set( this._state.detune_useControl && detuneControl[0] != undefined ? detuneControl[0] : parameters.detune );
 
             const dutyCycle_useFirstOnly = this._state.dutyCycle_useControl ? false : parameters.dutyCycle.length == 1;
+            this.dutyCycleFrame.buffer = new Float32Array(this.wasm.exports.memory.buffer, this.dutyCycleFrame.pointer, 128);
             this.dutyCycleFrame.buffer.set( this._state.dutyCycle_useControl && dutyCycleControl[0] != undefined ? dutyCycleControl[0] : parameters.dutyCycle );
 
         //process data, and copy results to channels
@@ -132,6 +160,7 @@ class integrated_synthesizer_type_1 extends AudioWorkletProcessor {
                     detune_useFirstOnly,
                     dutyCycle_useFirstOnly,
                 );
+                this.outputFrame.buffer = new Float32Array(this.wasm.exports.memory.buffer, this.outputFrame.pointer, 128);
                 output[channel].set(this.outputFrame.buffer);
             }
         

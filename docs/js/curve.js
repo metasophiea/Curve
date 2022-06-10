@@ -60,7 +60,7 @@
                 };
             };
             _canvas_.library = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2021,m:6,d:22} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2022,m:6,d:10} };
                 const library = this;
                 
                 const dev = {
@@ -5386,6 +5386,36 @@
                                                                         break;
                                                 
                                                                     //wasm initialization
+                                                                        case 'loadUncompiledWasm':
+                                                                            WebAssembly.compile(event.data.value).then(module => {
+                                                                                WebAssembly.instantiate(
+                                                                                    module,
+                                                                                    { env: {
+                                                                                        _onEnd: function(playhead_id){ self.port.postMessage({ command:'onEnd', value:playhead_id }); },
+                                                                                        _onLoop: function(playhead_id){ self.port.postMessage({ command:'onLoop', value:playhead_id }); },
+                                                    
+                                                                                        debug_: function(id, ...args){ console.log(id+':', args.join(' ')); },
+                                                                                    } },
+                                                                                ).then(result => {
+                                                                                    //save wasm processor to instance
+                                                                                        self.wasm = result;
+                                                    
+                                                                                    //attach buffers
+                                                                                        self.attachBuffers();
+                                                    
+                                                                                    //assemble additional wasm buffers
+                                                                                        self.audioBufferShovelFrame = { pointer: self.wasm.exports.get_audio_buffer_shovel_pointer() };
+                                                    
+                                                                                    //load data if necessary
+                                                                                        if(self._state.temporaryAudioData != undefined){
+                                                                                            self.transferAudioBufferDataIn(
+                                                                                                self._state.temporaryAudioData
+                                                                                            );
+                                                                                            self._state.temporaryAudioData = undefined;
+                                                                                        }
+                                                                                });
+                                                                            });
+                                                                        break;
                                                                         case 'loadWasm':
                                                                             WebAssembly.instantiate(
                                                                                 event.data.value,
@@ -5814,6 +5844,32 @@
                                                             this.port.onmessage = function(event){
                                                                 switch(event.data.command){
                                                                     //wasm initialization
+                                                                        case 'loadUncompiledWasm':
+                                                                            WebAssembly.compile(event.data.value).then(module => {
+                                                                                WebAssembly.instantiate(
+                                                                                    module,
+                                                                                    { env: { Math_random: Math.random, debug_: debug, } },
+                                                                                ).then(result => {
+                                                                                    //save wasm processor to instance
+                                                                                        self.wasm = result;
+                                                    
+                                                                                    //assemble wasm buffers
+                                                                                        self.frequencyFrame = { pointer: self.wasm.exports.get_frequency_pointer() };
+                                                                                        self.frequencyFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.frequencyFrame.pointer, 128);
+                                                                                        self.gainFrame = { pointer: self.wasm.exports.get_gain_pointer() };
+                                                                                        self.gainFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.gainFrame.pointer, 128);
+                                                                                        self.detuneFrame = { pointer: self.wasm.exports.get_detune_pointer() };
+                                                                                        self.detuneFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.detuneFrame.pointer, 128);
+                                                                                        self.dutyCycleFrame = { pointer: self.wasm.exports.get_duty_cycle_pointer() };
+                                                                                        self.dutyCycleFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.dutyCycleFrame.pointer, 128);
+                                                                                        self.outputFrame = { pointer: self.wasm.exports.get_output_pointer() };
+                                                                                        self.outputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.outputFrame.pointer, 128);
+                                                    
+                                                                                    //re-send waveform selection (just incase)
+                                                                                        self.wasm.exports.select_waveform(self._state.selected_waveform);
+                                                                                });
+                                                                            });
+                                                                        break;
                                                                         case 'loadWasm':
                                                                             WebAssembly.instantiate(
                                                                                 event.data.value,
@@ -6041,6 +6097,34 @@
                                                             this.port.onmessage = function(event){
                                                                 switch(event.data.command){
                                                                     //wasm initialization
+                                                                        case 'loadUncompiledWasm':
+                                                                            WebAssembly.compile(event.data.value)
+                                                                                .then(WebAssembly.instantiate)
+                                                                                .then(result => {
+                                                                                    self.wasm = result;
+                                                    
+                                                                                    self.inputFrame = {};
+                                                                                    self.inputFrame.pointer = self.wasm.exports.get_input_pointer();
+                                                                                    self.inputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.inputFrame.pointer, 128);
+                                                    
+                                                                                    self.outputFrame = {};
+                                                                                    self.outputFrame.pointer = self.wasm.exports.get_output_pointer();
+                                                                                    self.outputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.outputFrame.pointer, 128);
+                                                    
+                                                                                    self.divisorFrame = {};
+                                                                                    self.divisorFrame.pointer = self.wasm.exports.get_divisor_pointer();
+                                                                                    self.divisorFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.divisorFrame.pointer, 128);
+                                                                                    self.offsetFrame = {};
+                                                                                    self.offsetFrame.pointer = self.wasm.exports.get_offset_pointer();
+                                                                                    self.offsetFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.offsetFrame.pointer, 128);
+                                                                                    self.floorFrame = {};
+                                                                                    self.floorFrame.pointer = self.wasm.exports.get_floor_pointer();
+                                                                                    self.floorFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.floorFrame.pointer, 128);
+                                                                                    self.ceilingFrame = {};
+                                                                                    self.ceilingFrame.pointer = self.wasm.exports.get_ceiling_pointer();
+                                                                                    self.ceilingFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.ceilingFrame.pointer, 128);
+                                                                                });
+                                                                        break;
                                                                         case 'loadWasm':
                                                                             WebAssembly.instantiate(event.data.value).then(result => {
                                                                                 self.wasm = result;
@@ -6202,6 +6286,29 @@
                                                             this.port.onmessage = function(event){
                                                                 switch(event.data.command){
                                                                     //wasm initialization
+                                                                        case 'loadUncompiledWasm':
+                                                                            WebAssembly.compile(event.data.value)
+                                                                                .then(WebAssembly.instantiate)
+                                                                                .then(result => {
+                                                                                    self.wasm = result;
+                                                    
+                                                                                    self.input1Frame = {};
+                                                                                    self.input1Frame.pointer = self.wasm.exports.get_input_1_pointer();
+                                                                                    self.input1Frame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.input1Frame.pointer, 128);
+                                                    
+                                                                                    self.input2Frame = {};
+                                                                                    self.input2Frame.pointer = self.wasm.exports.get_input_2_pointer();
+                                                                                    self.input2Frame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.input2Frame.pointer, 128);
+                                                    
+                                                                                    self.mixControlFrame = {};
+                                                                                    self.mixControlFrame.pointer = self.wasm.exports.get_mix_control_pointer();
+                                                                                    self.mixControlFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.mixControlFrame.pointer, 128);
+                                                    
+                                                                                    self.outputFrame = {};
+                                                                                    self.outputFrame.pointer = self.wasm.exports.get_output_pointer();
+                                                                                    self.outputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.outputFrame.pointer, 128);
+                                                                                });
+                                                                        break;
                                                                         case 'loadWasm':
                                                                             WebAssembly.instantiate(event.data.value).then(result => {
                                                                                 self.wasm = result;
@@ -6337,6 +6444,25 @@
                                                             this.port.onmessage = function(event){
                                                                 switch(event.data.command){
                                                                     //wasm initialization
+                                                                        case 'loadUncompiledWasm':
+                                                                            WebAssembly.compile(event.data.value)
+                                                                                .then(WebAssembly.instantiate)
+                                                                                .then(result => {
+                                                                                    self.wasm = result;
+                                                    
+                                                                                    self.input1Frame = {};
+                                                                                    self.input1Frame.pointer = self.wasm.exports.get_input_1_pointer();
+                                                                                    self.input1Frame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.input1Frame.pointer, 128);
+                                                    
+                                                                                    self.input2Frame = {};
+                                                                                    self.input2Frame.pointer = self.wasm.exports.get_input_2_pointer();
+                                                                                    self.input2Frame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.input2Frame.pointer, 128);
+                                                    
+                                                                                    self.outputFrame = {};
+                                                                                    self.outputFrame.pointer = self.wasm.exports.get_output_pointer();
+                                                                                    self.outputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.outputFrame.pointer, 128);
+                                                                                });
+                                                                        break;
                                                                         case 'loadWasm':
                                                                             WebAssembly.instantiate(event.data.value).then(result => {
                                                                                 self.wasm = result;
@@ -6492,8 +6618,33 @@
                                                             //setup message receiver
                                                                 const self = this;
                                                                 this.port.onmessage = function(event){
+                                                                    // console.log(event);
                                                                     switch(event.data.command){
                                                                         //wasm initialization
+                                                                            case 'loadUncompiledWasm':
+                                                                                WebAssembly.compile(event.data.value).then(module => {
+                                                                                    WebAssembly.instantiate(
+                                                                                        module,
+                                                                                        { env: { Math_random: Math.random, debug_: debug, } },
+                                                                                    ).then(result => {
+                                                                                        //save wasm processor to instance
+                                                                                            self.wasm = result;
+                                                        
+                                                                                        //assemble wasm buffers
+                                                                                            self.gainFrame = { pointer: self.wasm.exports.get_gain_pointer() };
+                                                                                            self.gainFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.gainFrame.pointer, 128);
+                                                                                            self.detuneFrame = { pointer: self.wasm.exports.get_detune_pointer() };
+                                                                                            self.detuneFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.detuneFrame.pointer, 128);
+                                                                                            self.dutyCycleFrame = { pointer: self.wasm.exports.get_duty_cycle_pointer() };
+                                                                                            self.dutyCycleFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.dutyCycleFrame.pointer, 128);
+                                                                                            self.outputFrame = { pointer: self.wasm.exports.get_output_pointer() };
+                                                                                            self.outputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.outputFrame.pointer, 128);
+                                                        
+                                                                                        //re-send waveform selection (just incase)
+                                                                                            self.wasm.exports.select_waveform(self._state.selected_waveform);
+                                                                                    });
+                                                                                });
+                                                                            break;
                                                                             case 'loadWasm':
                                                                                 WebAssembly.instantiate(
                                                                                     event.data.value,
@@ -6563,12 +6714,15 @@
                                                 
                                                         //populate input buffers
                                                             const gain_useFirstOnly = this._state.gain_useControl ? false : parameters.gain.length == 1;
+                                                            this.gainFrame.buffer = new Float32Array(this.wasm.exports.memory.buffer, this.gainFrame.pointer, 128);
                                                             this.gainFrame.buffer.set( this._state.gain_useControl && gainControl[0] != undefined ? gainControl[0] : parameters.gain );
                                                 
                                                             const detune_useFirstOnly = this._state.detune_useControl ? false : parameters.detune.length == 1;
+                                                            this.detuneFrame.buffer = new Float32Array(this.wasm.exports.memory.buffer, this.detuneFrame.pointer, 128);
                                                             this.detuneFrame.buffer.set( this._state.detune_useControl && detuneControl[0] != undefined ? detuneControl[0] : parameters.detune );
                                                 
                                                             const dutyCycle_useFirstOnly = this._state.dutyCycle_useControl ? false : parameters.dutyCycle.length == 1;
+                                                            this.dutyCycleFrame.buffer = new Float32Array(this.wasm.exports.memory.buffer, this.dutyCycleFrame.pointer, 128);
                                                             this.dutyCycleFrame.buffer.set( this._state.dutyCycle_useControl && dutyCycleControl[0] != undefined ? dutyCycleControl[0] : parameters.dutyCycle );
                                                 
                                                         //process data, and copy results to channels
@@ -6578,6 +6732,7 @@
                                                                     detune_useFirstOnly,
                                                                     dutyCycle_useFirstOnly,
                                                                 );
+                                                                this.outputFrame.buffer = new Float32Array(this.wasm.exports.memory.buffer, this.outputFrame.pointer, 128);
                                                                 output[channel].set(this.outputFrame.buffer);
                                                             }
                                                         
@@ -6711,6 +6866,29 @@
                                                             this.port.onmessage = function(event){
                                                                 switch(event.data.command){
                                                                     //wasm initialization
+                                                                        case 'loadUncompiledWasm':
+                                                                            WebAssembly.compile(event.data.value)
+                                                                                .then(WebAssembly.instantiate)
+                                                                                .then(result => {
+                                                                                    self.wasm = result;
+                                                    
+                                                                                    self.inputFrame = {};
+                                                                                    self.inputFrame.pointer = self.wasm.exports.get_input_pointer();
+                                                                                    self.inputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.inputFrame.pointer, 128);
+                                                    
+                                                                                    self.outputFrame = {};
+                                                                                    self.outputFrame.pointer = self.wasm.exports.get_output_pointer();
+                                                                                    self.outputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.outputFrame.pointer, 128);
+                                                    
+                                                                                    self.gainBuffer = {};
+                                                                                    self.gainBuffer.pointer = self.wasm.exports.get_gain_pointer();
+                                                                                    self.gainBuffer.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.gainBuffer.pointer, 128);
+                                                    
+                                                                                    self.sharpnessBuffer = {};
+                                                                                    self.sharpnessBuffer.pointer = self.wasm.exports.get_sharpness_pointer();
+                                                                                    self.sharpnessBuffer.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.sharpnessBuffer.pointer, 128);
+                                                                                });
+                                                                        break;
                                                                         case 'loadWasm':
                                                                             WebAssembly.instantiate(event.data.value).then(result => {
                                                                                 self.wasm = result;
@@ -6832,6 +7010,21 @@
                                                             this.port.onmessage = function(event){
                                                                 switch(event.data.command){
                                                                     //wasm initialization
+                                                                        case 'loadUncompiledWasm':
+                                                                            WebAssembly.compile(event.data.value)
+                                                                                .then(WebAssembly.instantiate)
+                                                                                .then(result => {
+                                                                                    self.wasm = result;
+                                                    
+                                                                                    self.inputFrame = {};
+                                                                                    self.inputFrame.pointer = self.wasm.exports.get_input_pointer();
+                                                                                    self.inputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.inputFrame.pointer, 128);
+                                                    
+                                                                                    self.outputFrame = {};
+                                                                                    self.outputFrame.pointer = self.wasm.exports.get_output_pointer();
+                                                                                    self.outputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.outputFrame.pointer, 128);
+                                                                                });
+                                                                        break;
                                                                         case 'loadWasm':
                                                                             WebAssembly.instantiate(event.data.value).then(result => {
                                                                                 self.wasm = result;
@@ -6948,6 +7141,21 @@
                                                             this.port.onmessage = function(event){
                                                                 switch(event.data.command){
                                                                     //wasm initialization
+                                                                        case 'loadUncompiledWasm':
+                                                                            WebAssembly.compile(event.data.value)
+                                                                                .then(WebAssembly.instantiate)
+                                                                                .then(result => {
+                                                                                    self.wasm = result;
+                                                
+                                                                                    self.inputFrame = {};
+                                                                                    self.inputFrame.pointer = self.wasm.exports.get_input_pointer();
+                                                                                    self.inputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.inputFrame.pointer, 128);
+                                                
+                                                                                    self.outputFrame = {};
+                                                                                    self.outputFrame.pointer = self.wasm.exports.get_output_pointer();
+                                                                                    self.outputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.outputFrame.pointer, 128);
+                                                                                });
+                                                                        break;
                                                                         case 'loadWasm':
                                                                             WebAssembly.instantiate(event.data.value).then(result => {
                                                                                 self.wasm = result;
@@ -8303,6 +8511,496 @@
                                                 }
                                             ,
                                         },
+                                        {
+                                            name:'audio_buffer_type_2',
+                                            worklet:new Blob([`
+                                                class audio_buffer_type_2 extends AudioWorkletProcessor {
+                                                    static get parameterDescriptors(){
+                                                        return [
+                                                            {
+                                                                name: 'rate',
+                                                                defaultValue: 1,
+                                                                minValue: -8,
+                                                                maxValue: 8,
+                                                                automationRate: 'a-rate',
+                                                            },
+                                                        ];
+                                                    }
+                                                
+                                                    attachBuffers(){
+                                                        this.playheadPositionReadout = { pointer: this.wasm.exports.get_playhead_position_readout_pointer() };
+                                                        this.playheadPositionReadout.buffer = new Uint32Array(this.wasm.exports.memory.buffer, this.playheadPositionReadout.pointer, 256);
+                                                        this.outputFrame = { pointer: this.wasm.exports.get_output_pointer() };
+                                                        this.outputFrame.buffer = new Float32Array(this.wasm.exports.memory.buffer, this.outputFrame.pointer, 128);
+                                                        this.rateFrame = { pointer: this.wasm.exports.get_rate_pointer() };
+                                                        this.rateFrame.buffer = new Float32Array(this.wasm.exports.memory.buffer, this.rateFrame.pointer, 128);
+                                                    }
+                                                
+                                                    constructor(options){
+                                                        //construct class instance
+                                                            super(options);
+                                                
+                                                        //instance state
+                                                            this.shutdown = false;
+                                                            this._state = {
+                                                                nodeConstructorTime: undefined,
+                                                                temporaryAudioData: undefined,
+                                                                rate_useControl: false,
+                                                            };
+                                                
+                                                        //setup message receiver
+                                                            const self = this;
+                                                            this.port.onmessage = function(event){
+                                                                console.log(event.data);
+                                                                switch(event.data.command){
+                                                                    //time sync
+                                                                        case 'log_nodeConstructorTime':
+                                                                            self._state.nodeConstructorTime = event.data.value;
+                                                                        break;
+                                                
+                                                                    //wasm initialization
+                                                                        case 'loadUncompiledWasm':
+                                                                            WebAssembly.compile(event.data.value).then(module => {
+                                                                                WebAssembly.instantiate(
+                                                                                    module,
+                                                                                    { env: {
+                                                                                        _onEnd: function(playhead_id){ self.port.postMessage({ command:'onEnd', value:playhead_id }); },
+                                                                                        _onLoop: function(playhead_id){ self.port.postMessage({ command:'onLoop', value:playhead_id }); },
+                                                    
+                                                                                        debug_: function(id, ...args){ console.log(id+':', args.join(' ')); },
+                                                                                    } },
+                                                                                ).then(result => {
+                                                                                    //save wasm processor to instance
+                                                                                        self.wasm = result;
+                                                    
+                                                                                    //attach buffers
+                                                                                        self.attachBuffers();
+                                                    
+                                                                                    //assemble additional wasm buffers
+                                                                                        self.audioBufferShovelFrame = { pointer: self.wasm.exports.get_audio_buffer_shovel_pointer() };
+                                                    
+                                                                                    //load data if necessary
+                                                                                        if(self._state.temporaryAudioData != undefined){
+                                                                                            self.transferAudioBufferDataIn(
+                                                                                                self._state.temporaryAudioData
+                                                                                            );
+                                                                                            self._state.temporaryAudioData = undefined;
+                                                                                        }
+                                                                                });
+                                                                            });
+                                                                        break;
+                                                                        case 'loadWasm':
+                                                                            WebAssembly.instantiate(
+                                                                                event.data.value,
+                                                                                { env: {
+                                                                                    _onEnd: function(playhead_id){ self.port.postMessage({ command:'onEnd', value:playhead_id }); },
+                                                                                    _onLoop: function(playhead_id){ self.port.postMessage({ command:'onLoop', value:playhead_id }); },
+                                                
+                                                                                    debug_: function(id, ...args){ console.log(id+':', args.join(' ')); },
+                                                                                } },
+                                                                            ).then(result => {
+                                                                                //save wasm processor to instance
+                                                                                    self.wasm = result;
+                                                
+                                                                                //attach buffers
+                                                                                    self.attachBuffers();
+                                                
+                                                                                //assemble additional wasm buffers
+                                                                                    self.audioBufferShovelFrame = { pointer: self.wasm.exports.get_audio_buffer_shovel_pointer() };
+                                                
+                                                                                //load data if necessary
+                                                                                    if(self._state.temporaryAudioData != undefined){
+                                                                                        self.transferAudioBufferDataIn(
+                                                                                            self._state.temporaryAudioData
+                                                                                        );
+                                                                                        self._state.temporaryAudioData = undefined;
+                                                                                    }
+                                                                            });
+                                                                        break;
+                                                                    
+                                                                    //load data
+                                                                        case "loadAudioData":
+                                                                            if(self.wasm == undefined){
+                                                                                self._state.temporaryAudioData = event.data.value;
+                                                                            } else {
+                                                                                self.transferAudioBufferDataIn(event.data.value);
+                                                                            }
+                                                
+                                                                            self.port.postMessage({
+                                                                                command: 'loadAudioData_loadComplete', 
+                                                                                value: undefined,
+                                                                            });
+                                                                        break;
+                                                
+                                                                    //performance control
+                                                                        case 'play':
+                                                                            self.wasm.exports.play(event.data.value.playhead_id!=undefined, event.data.value.playhead_id);
+                                                                        break;
+                                                                        case 'stop':
+                                                                            self.wasm.exports.stop(event.data.value.playhead_id!=undefined, event.data.value.playhead_id);
+                                                                        break;
+                                                
+                                                                        case 'set_loop_active':
+                                                                            self.wasm.exports.set_loop_active(event.data.value.playhead_id!=undefined, event.data.value.playhead_id, event.data.value.loop_active);
+                                                                        break;
+                                                
+                                                                        case 'set_playhead_position':
+                                                                            self.wasm.exports.set_playhead_position(event.data.value.playhead_id!=undefined, event.data.value.playhead_id, event.data.value.position);
+                                                                        break;
+                                                                        case 'got_to_start':
+                                                                            self.wasm.exports.got_to_start(event.data.value.playhead_id!=undefined, event.data.value.playhead_id);
+                                                                        break;
+                                                                        case 'got_to_end':
+                                                                            self.wasm.exports.got_to_end(event.data.value.playhead_id!=undefined, event.data.value.playhead_id);
+                                                                        break;
+                                                
+                                                                        case 'section_start':
+                                                                            self.wasm.exports.section_start(event.data.value.playhead_id!=undefined, event.data.value.playhead_id, event.data.value.position);
+                                                                        break;
+                                                                        case 'section_end':
+                                                                            self.wasm.exports.section_end(event.data.value.playhead_id!=undefined, event.data.value.playhead_id, event.data.value.position);
+                                                                        break;
+                                                                        case 'maximize_section':
+                                                                            self.wasm.exports.maximize_section(event.data.value.playhead_id!=undefined, event.data.value.playhead_id);
+                                                                        break;
+                                                                        case 'invert_section':
+                                                                            self.wasm.exports.invert_section(event.data.value.playhead_id!=undefined, event.data.value.playhead_id);
+                                                                        break;
+                                                
+                                                                    //status
+                                                                        case 'getPlayheadPosition':
+                                                                            if(event.data.value.calculateDelay){
+                                                                                const calculatedPresentTime = globalThis.currentTime*1000 + self._state.nodeConstructorTime;
+                                                                                const sendingDelay = calculatedPresentTime - event.data.sendTime;
+                                                    
+                                                                                self.port.postMessage({
+                                                                                    command:'getPlayheadPosition_return', 
+                                                                                    value: {
+                                                                                        playhead_id: event.data.value.playhead_id,
+                                                                                        playheadPosition: self.playheadPositionReadout.buffer[event.data.value.playhead_id],
+                                                                                        sendingDelay: sendingDelay,
+                                                                                    },
+                                                                                    sendTime: globalThis.currentTime*1000,
+                                                                                });
+                                                                            } else {
+                                                                                self.port.postMessage({
+                                                                                    command:'getPlayheadPosition_return', 
+                                                                                    value: {
+                                                                                        playhead_id: event.data.value.playhead_id,
+                                                                                        playheadPosition: self.playheadPositionReadout.buffer[event.data.value.playhead_id],
+                                                                                    },
+                                                                                });
+                                                                            }
+                                                                        break;
+                                                
+                                                                    //use control
+                                                                        case 'rate_useControl': 
+                                                                            self._state.rate_useControl = event.data.value;
+                                                                        break;
+                                                
+                                                                    //shutdown
+                                                                        case 'shutdown':
+                                                                            self.shutdown = true;
+                                                                        break;
+                                                                }
+                                                            };
+                                                    }
+                                                
+                                                    transferAudioBufferDataIn(audio_data){
+                                                        this.wasm.exports.clear_audio_buffer();
+                                                
+                                                        const shovelSize = this.wasm.exports.get_shovel_size();
+                                                        const block_count = (Math.floor(audio_data.length / shovelSize) + 1);
+                                                        for(let block = 0; block < block_count; block++) {
+                                                            //reattach shovel buffer 
+                                                                this.audioBufferShovelFrame.buffer = new Float32Array(
+                                                                    this.wasm.exports.memory.buffer, 
+                                                                    this.wasm.exports.get_audio_buffer_shovel_pointer(), 
+                                                                    shovelSize
+                                                                );
+                                                
+                                                            //shovel block in
+                                                                const data_to_send = audio_data.slice( block*shovelSize, (block+1)*shovelSize );
+                                                                this.audioBufferShovelFrame.buffer.set(data_to_send);
+                                                                this.wasm.exports.shovel_audio_data_in(data_to_send.length);
+                                                        }
+                                                
+                                                        this.attachBuffers();
+                                                    }
+                                                
+                                                    process(inputs, outputs, parameters){
+                                                        // console.log('>>',this.wasm);
+                                                        if(this.shutdown){ return false; }
+                                                        if(this.wasm == undefined || this.rateFrame == undefined){ return true; }
+                                                        // console.log('>>',this.rateFrame);
+                                                
+                                                        //collect inputs/outputs
+                                                            const output = outputs[0];
+                                                            const rateControl = inputs[0];
+                                                
+                                                        //populate input buffers
+                                                            const rate_useFirstOnly = this._state.rate_useControl ? false : parameters.rate.length == 1;
+                                                            this.rateFrame.buffer.set( this._state.rate_useControl && rateControl[0] != undefined ? rateControl[0] : parameters.rate );
+                                                
+                                                        //have wasm process data, and copy results to channels
+                                                            this.wasm.exports.process(
+                                                                rate_useFirstOnly,
+                                                            );
+                                                            for(let channel = 0; channel < output.length; channel++){
+                                                                output[channel].set(this.outputFrame.buffer);
+                                                            }
+                                                
+                                                        return true;
+                                                    }
+                                                }
+                                                registerProcessor('audio_buffer_type_2', audio_buffer_type_2);
+                                            `], { type: "text/javascript" }),
+                                            class:
+                                                class audio_buffer_type_2 extends AudioWorkletNode{
+                                                    // static wasm_url = 'wasm/audio_processing/audio_buffer_type_2.production.wasm';
+                                                    static wasm_url = 'wasm/audio_processing/audio_buffer_type_2.development.wasm';
+                                                    static fetch_promise;
+                                                    static compiled_wasm;
+                                                
+                                                    constructor(context, options={}){
+                                                        const nodeConstructorTime = performance.now();
+                                                
+                                                        //populate options
+                                                            options.numberOfInputs = 1; //rate
+                                                            options.numberOfOutputs = 1;
+                                                            options.channelCount = 1;
+                                                
+                                                        //generate class instance
+                                                            super(context, 'audio_buffer_type_2', options);
+                                                
+                                                        //time sync
+                                                            this.nodeConstructorTime = nodeConstructorTime;
+                                                            this.port.postMessage({command:'log_nodeConstructorTime', value:this.nodeConstructorTime});
+                                                
+                                                        //load wasm processor
+                                                            audio.audioWorklet.requestWasm(audio_buffer_type_2, this);
+                                                
+                                                        //instance state
+                                                            this._state = {
+                                                                audioFileLength: undefined,
+                                                                loop: [],
+                                                                section: [],
+                                                            };
+                                                        
+                                                        //load data
+                                                            let loadAudioData_promiseResolve;
+                                                            this.loadAudioData = function(audioData){
+                                                                let maximize = this._state.section.start == 0 && this._state.section.end == this._state.audioFileLength;
+                                                                this._state.audioFileLength = audioData.length;
+                                                                if(maximize || this._state.audioFileLength < this._state.section.start && this._state.audioFileLength < this._state.section.end){
+                                                                    this._state.section.start = 0;
+                                                                    this._state.section.end = this._state.audioFileLength;
+                                                                }
+                                                                if(this._state.audioFileLength < this._state.section.start){ this._state.section.start = this._state.audioFileLength; }
+                                                                if(this._state.audioFileLength < this._state.section.end){ this._state.section.end = this._state.audioFileLength; }
+                                                    
+                                                                this.port.postMessage({command:'loadAudioData', value:audioData});
+                                                
+                                                                return new Promise((resolve, reject) => {
+                                                                    loadAudioData_promiseResolve = resolve;
+                                                                });
+                                                            };
+                                                
+                                                        //performance control
+                                                            this.play = function(playheadId){
+                                                                this.port.postMessage({command:'play', value:{playhead_id:playheadId}});
+                                                            };
+                                                            this.stop = function(playheadId){
+                                                                this.port.postMessage({command:'stop', value:{playhead_id:playheadId}});
+                                                            };
+                                                
+                                                            this.loop = function(playheadId, active){
+                                                                if(playheadId == undefined && active == undefined){
+                                                                    return this._state.loop;
+                                                                }else if(active == undefined){
+                                                                    return this._state.loop[playheadId];
+                                                                }
+                                                
+                                                                if(playheadId == undefined){
+                                                                    this._state.loop = this._state.loop.map(() => active);
+                                                                } else {
+                                                                    this._state.loop[playheadId] = active;
+                                                                }
+                                                
+                                                                this.port.postMessage({command:'set_loop_active', value:{playhead_id:playheadId, loop_active:active}});
+                                                            };
+                                                            this.setPlayheadPosition = function(playheadId, position){
+                                                                if(position == undefined){
+                                                                    console.error('audio_buffer_type_2.set_playhead_position - position undefined');
+                                                                    return;
+                                                                }
+                                                
+                                                                this.port.postMessage({command:'set_playhead_position', value:{playhead_id:playheadId, position:position}});
+                                                            };
+                                                
+                                                            this.gotoStart = function(playheadId){
+                                                                this.port.postMessage({command:'go_to_start', value:{playhead_id:playheadId}});
+                                                            };
+                                                            this.gotoEnd = function(playheadId){
+                                                                this.port.postMessage({command:'go_to_end', value:{playhead_id:playheadId}});
+                                                            };
+                                                
+                                                            this.sectionStart = function(playheadId, position){
+                                                                if(position > this._state.audioFileLength-1){
+                                                                    console.warn("audio_buffer_type_2.section_start - attempting to select a section start position \""+position+"\" which exceeds the audio data length \""+(this._state.audioFileLength-1)+"\". Position will be corrected");
+                                                                    position = this._state.audioFileLength-1;
+                                                                }
+                                                                if(position < 0){
+                                                                    console.warn("audio_buffer_type_2.section_start - attempting to select a section start position below zero. Position will be corrected");
+                                                                    position = 0;
+                                                                }
+                                                
+                                                                if(playheadId == undefined){
+                                                                    for(let a = 0; a < this._state.section.length; a++){
+                                                                        this._state.section[a].start = position;
+                                                                    }
+                                                                } else {
+                                                                    if(this._state.section[playheadId] == undefined) {
+                                                                        this._state.section[playheadId] = {
+                                                                            start: position,
+                                                                            end: this._state.audioFileLength-1
+                                                                        };
+                                                                    }
+                                                                    this._state.section[playheadId].start = position;
+                                                                }
+                                                
+                                                                this.port.postMessage({command:'section_start', value:{playhead_id:playheadId, position:position}});
+                                                            };
+                                                            this.sectionEnd = function(playheadId, position){
+                                                                if(position > this._state.audioFileLength-1){
+                                                                    console.warn("audio_buffer_type_2.section_end - attempting to select a section end position \""+position+"\" which exceeds the audio data length \""+(this._state.audioFileLength-1)+"\". Position will be corrected");
+                                                                    position = this._state.audioFileLength-1;
+                                                                }
+                                                                if(position < 0){
+                                                                    console.warn("audio_buffer_type_2.section_end - attempting to select a section end position below zero. Position will be corrected");
+                                                                    position = 0;
+                                                                }
+                                                
+                                                                if(playheadId == undefined){
+                                                                    for(let a = 0; a < this._state.section.length; a++){
+                                                                        this._state.section[a].end = position;
+                                                                    }
+                                                                } else {
+                                                                    if(this._state.section[playheadId] == undefined) {
+                                                                        this._state.section[playheadId] = {
+                                                                            start: 0,
+                                                                            end: position
+                                                                        };
+                                                                    }
+                                                                    this._state.section[playheadId].end = position;
+                                                                }
+                                                
+                                                                this.port.postMessage({command:'section_end', value:{playhead_id:playheadId, position:position}});
+                                                            };
+                                                
+                                                            this.maximizeSection = function(playheadId){
+                                                                if(playheadId == undefined){
+                                                                    for(let a = 0; a < this._state.section.length; a++){
+                                                                        this._state.section[a].start = 0;
+                                                                        this._state.section[a].end = this._state.audioFileLength;
+                                                                    }
+                                                                } else {
+                                                                    this._state.section[playheadId].start = 0;
+                                                                    this._state.section[playheadId].end = this._state.audioFileLength;
+                                                                }
+                                                
+                                                                this.port.postMessage({command:'maximize_section', value:{playhead_id:playheadId}});
+                                                            };
+                                                            this.invertSection = function(playheadId){
+                                                                if(playheadId == undefined){
+                                                                    for(let a = 0; a < this._state.section.length; a++){
+                                                                        const tmp = this._state.section[a].start
+                                                                        this._state.section[a].start = this._state.section[a].end;
+                                                                        this._state.section[a].end = tmp;
+                                                                    }
+                                                                } else {
+                                                                    const tmp = this._state.section[playheadId].start
+                                                                    this._state.section[playheadId].start = this._state.section[playheadId].end;
+                                                                    this._state.section[playheadId].end = tmp;
+                                                                }
+                                                
+                                                                this.port.postMessage({command:'invert_section', value:{playhead_id:playheadId}});
+                                                            };
+                                                
+                                                        //status
+                                                            let getPlayheadPosition_promiseResolve = [];
+                                                            this.getPlayheadPosition = function(playheadId, calculateDelay=false){
+                                                                if(typeof playheadId != "number"){
+                                                                    console.error('audio_buffer_type_2.getPlayheadPosition - playheadId not a number');
+                                                                    return;
+                                                                }
+                                                
+                                                                this.port.postMessage({
+                                                                    command:'getPlayheadPosition', 
+                                                                    value:{
+                                                                        playhead_id: playheadId,
+                                                                        calculateDelay: calculateDelay
+                                                                    },
+                                                                    sendTime:performance.now(),
+                                                                });
+                                                                return new Promise((resolve, reject) => {
+                                                                    getPlayheadPosition_promiseResolve[playheadId] = resolve;
+                                                                });
+                                                            };
+                                                
+                                                        //shutdown
+                                                            this.shutdown = function(){
+                                                                this.port.postMessage({command:'shutdown', value:undefined});
+                                                                this.port.close();
+                                                            };
+                                                
+                                                        //callbacks
+                                                            this.onEnd = function(){ /*console.log('onEnd!');*/ };
+                                                            this.onLoop = function(){ /*console.log('onLoop!');*/ };
+                                                
+                                                        //setup message receiver
+                                                            const self = this;
+                                                            this.port.onmessage = function(event){
+                                                                switch(event.data.command){
+                                                                    case 'onEnd': self.onEnd(event.data.value); break;
+                                                                    case 'onLoop': self.onLoop(event.data.value); break;
+                                                                    case 'getPlayheadPosition_return':
+                                                                        if(getPlayheadPosition_promiseResolve[event.data.value.playhead_id] != undefined){
+                                                                            if(event.data.value.sendingDelay == undefined) {
+                                                                                getPlayheadPosition_promiseResolve[event.data.value.playhead_id](event.data.value.playheadPosition);
+                                                                            } else {
+                                                                                const sendingDelay = (event.data.sendTime + nodeConstructorTime) - performance.now();
+                                                                                const completeDelay = event.data.value.sendingDelay + sendingDelay;
+                                                                                getPlayheadPosition_promiseResolve[event.data.value.playhead_id]({playheadPosition:event.data.value, resultDelay:completeDelay});
+                                                                            }
+                                                                            getPlayheadPosition_promiseResolve[event.data.value.playhead_id] = undefined;
+                                                                        }
+                                                                    break;
+                                                                    case 'loadAudioData_loadComplete':
+                                                                        loadAudioData_promiseResolve();
+                                                                        loadAudioData_promiseResolve = undefined;
+                                                                    break;
+                                                                }
+                                                            };
+                                                    }
+                                                
+                                                    get length(){
+                                                        return this._state.audioFileLength;
+                                                    }
+                                                
+                                                    get rate(){
+                                                        return this.parameters.get('rate');
+                                                    }
+                                                    get rate_useControl(){
+                                                        return this._state.rate_useControl;
+                                                    }
+                                                    set rate_useControl(bool){
+                                                        this._state.rate_useControl = bool;
+                                                        this.port.postMessage({command:'rate_useControl', value:bool});
+                                                    }
+                                                }
+                                            ,
+                                        },
                                     ],
                                     readyCount:0,
                                 },
@@ -8354,23 +9052,46 @@
                         this.checkIfReady = function(){ return checkIfReady(); };
                         this.nowReady = function(){};
                         this.requestWasm = function(class_self, instance_self){
+                            //for some reason, "port.postMessage" can't send compiled wasm anymore, so we now have to send the arrayBuffer
+                            //and have it be compiled on the worker side
+                            //consider the following a hot-fix. You *should* be able to send Wasm modules to the worker
+                    
+                            // if(class_self.compiled_wasm != undefined){
+                            //     instance_self.port.postMessage({command:'loadWasm', value:class_self.compiled_wasm});
+                            // } else if(class_self.fetch_promise == undefined){
+                            //     class_self.fetch_promise = fetch(class_self.wasm_url)
+                            //         .then(response => {
+                            //             return response.arrayBuffer();
+                            //         }).then(arrayBuffer => {
+                            //             return WebAssembly.compile(arrayBuffer);
+                            //         }).then(module => {
+                            //             class_self.compiled_wasm = module;
+                            //             instance_self.port.postMessage({command:'loadWasm', value:class_self.compiled_wasm});
+                            //         });
+                            // } else {
+                            //     instance_self.attemptSecondaryWasmLoadIntervalId = setInterval(() => {
+                            //         if(class_self.compiled_wasm != undefined){
+                            //             clearInterval(instance_self.attemptSecondaryWasmLoadIntervalId);
+                            //             instance_self.port.postMessage({command:'loadWasm', value:class_self.compiled_wasm});
+                            //         }
+                            //     }, 100);
+                            // }
+                    
                             if(class_self.compiled_wasm != undefined){
-                                instance_self.port.postMessage({command:'loadWasm', 'value':class_self.compiled_wasm});
+                                instance_self.port.postMessage({command:'loadUncompiledWasm', value:class_self.compiled_wasm});
                             } else if(class_self.fetch_promise == undefined){
                                 class_self.fetch_promise = fetch(class_self.wasm_url)
                                     .then(response => {
                                         return response.arrayBuffer();
                                     }).then(arrayBuffer => {
-                                        return WebAssembly.compile(arrayBuffer);
-                                    }).then(module => {
-                                        class_self.compiled_wasm = module;
-                                        instance_self.port.postMessage({command:'loadWasm', 'value':class_self.compiled_wasm});
+                                        class_self.compiled_wasm = arrayBuffer;
+                                        instance_self.port.postMessage({command:'loadUncompiledWasm', value:arrayBuffer});
                                     });
                             } else {
                                 instance_self.attemptSecondaryWasmLoadIntervalId = setInterval(() => {
                                     if(class_self.compiled_wasm != undefined){
                                         clearInterval(instance_self.attemptSecondaryWasmLoadIntervalId);
-                                        instance_self.port.postMessage({command:'loadWasm', 'value':class_self.compiled_wasm});
+                                        instance_self.port.postMessage({command:'loadUncompiledWasm', value:class_self.compiled_wasm});
                                     }
                                 }, 100);
                             }

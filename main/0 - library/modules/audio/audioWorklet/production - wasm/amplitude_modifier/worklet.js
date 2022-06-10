@@ -47,6 +47,34 @@ class amplitudeModifier extends AudioWorkletProcessor{
             this.port.onmessage = function(event){
                 switch(event.data.command){
                     //wasm initialization
+                        case 'loadUncompiledWasm':
+                            WebAssembly.compile(event.data.value)
+                                .then(WebAssembly.instantiate)
+                                .then(result => {
+                                    self.wasm = result;
+    
+                                    self.inputFrame = {};
+                                    self.inputFrame.pointer = self.wasm.exports.get_input_pointer();
+                                    self.inputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.inputFrame.pointer, 128);
+    
+                                    self.outputFrame = {};
+                                    self.outputFrame.pointer = self.wasm.exports.get_output_pointer();
+                                    self.outputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.outputFrame.pointer, 128);
+    
+                                    self.divisorFrame = {};
+                                    self.divisorFrame.pointer = self.wasm.exports.get_divisor_pointer();
+                                    self.divisorFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.divisorFrame.pointer, 128);
+                                    self.offsetFrame = {};
+                                    self.offsetFrame.pointer = self.wasm.exports.get_offset_pointer();
+                                    self.offsetFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.offsetFrame.pointer, 128);
+                                    self.floorFrame = {};
+                                    self.floorFrame.pointer = self.wasm.exports.get_floor_pointer();
+                                    self.floorFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.floorFrame.pointer, 128);
+                                    self.ceilingFrame = {};
+                                    self.ceilingFrame.pointer = self.wasm.exports.get_ceiling_pointer();
+                                    self.ceilingFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.ceilingFrame.pointer, 128);
+                                });
+                        break;
                         case 'loadWasm':
                             WebAssembly.instantiate(event.data.value).then(result => {
                                 self.wasm = result;

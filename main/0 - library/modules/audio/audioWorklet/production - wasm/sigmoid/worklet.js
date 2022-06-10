@@ -30,6 +30,29 @@ class sigmoid extends AudioWorkletProcessor{
             this.port.onmessage = function(event){
                 switch(event.data.command){
                     //wasm initialization
+                        case 'loadUncompiledWasm':
+                            WebAssembly.compile(event.data.value)
+                                .then(WebAssembly.instantiate)
+                                .then(result => {
+                                    self.wasm = result;
+    
+                                    self.inputFrame = {};
+                                    self.inputFrame.pointer = self.wasm.exports.get_input_pointer();
+                                    self.inputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.inputFrame.pointer, 128);
+    
+                                    self.outputFrame = {};
+                                    self.outputFrame.pointer = self.wasm.exports.get_output_pointer();
+                                    self.outputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.outputFrame.pointer, 128);
+    
+                                    self.gainBuffer = {};
+                                    self.gainBuffer.pointer = self.wasm.exports.get_gain_pointer();
+                                    self.gainBuffer.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.gainBuffer.pointer, 128);
+    
+                                    self.sharpnessBuffer = {};
+                                    self.sharpnessBuffer.pointer = self.wasm.exports.get_sharpness_pointer();
+                                    self.sharpnessBuffer.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.sharpnessBuffer.pointer, 128);
+                                });
+                        break;
                         case 'loadWasm':
                             WebAssembly.instantiate(event.data.value).then(result => {
                                 self.wasm = result;

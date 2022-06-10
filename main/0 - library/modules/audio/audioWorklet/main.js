@@ -75,23 +75,46 @@ this.audioWorklet = new function(){
     this.checkIfReady = function(){ return checkIfReady(); };
     this.nowReady = function(){};
     this.requestWasm = function(class_self, instance_self){
+        //for some reason, "port.postMessage" can't send compiled wasm anymore, so we now have to send the arrayBuffer
+        //and have it be compiled on the worker side
+        //consider the following a hot-fix. You *should* be able to send Wasm modules to the worker
+
+        // if(class_self.compiled_wasm != undefined){
+        //     instance_self.port.postMessage({command:'loadWasm', value:class_self.compiled_wasm});
+        // } else if(class_self.fetch_promise == undefined){
+        //     class_self.fetch_promise = fetch(class_self.wasm_url)
+        //         .then(response => {
+        //             return response.arrayBuffer();
+        //         }).then(arrayBuffer => {
+        //             return WebAssembly.compile(arrayBuffer);
+        //         }).then(module => {
+        //             class_self.compiled_wasm = module;
+        //             instance_self.port.postMessage({command:'loadWasm', value:class_self.compiled_wasm});
+        //         });
+        // } else {
+        //     instance_self.attemptSecondaryWasmLoadIntervalId = setInterval(() => {
+        //         if(class_self.compiled_wasm != undefined){
+        //             clearInterval(instance_self.attemptSecondaryWasmLoadIntervalId);
+        //             instance_self.port.postMessage({command:'loadWasm', value:class_self.compiled_wasm});
+        //         }
+        //     }, 100);
+        // }
+
         if(class_self.compiled_wasm != undefined){
-            instance_self.port.postMessage({command:'loadWasm', 'value':class_self.compiled_wasm});
+            instance_self.port.postMessage({command:'loadUncompiledWasm', value:class_self.compiled_wasm});
         } else if(class_self.fetch_promise == undefined){
             class_self.fetch_promise = fetch(class_self.wasm_url)
                 .then(response => {
                     return response.arrayBuffer();
                 }).then(arrayBuffer => {
-                    return WebAssembly.compile(arrayBuffer);
-                }).then(module => {
-                    class_self.compiled_wasm = module;
-                    instance_self.port.postMessage({command:'loadWasm', 'value':class_self.compiled_wasm});
+                    class_self.compiled_wasm = arrayBuffer;
+                    instance_self.port.postMessage({command:'loadUncompiledWasm', value:arrayBuffer});
                 });
         } else {
             instance_self.attemptSecondaryWasmLoadIntervalId = setInterval(() => {
                 if(class_self.compiled_wasm != undefined){
                     clearInterval(instance_self.attemptSecondaryWasmLoadIntervalId);
-                    instance_self.port.postMessage({command:'loadWasm', 'value':class_self.compiled_wasm});
+                    instance_self.port.postMessage({command:'loadUncompiledWasm', value:class_self.compiled_wasm});
                 }
             }, 100);
         }

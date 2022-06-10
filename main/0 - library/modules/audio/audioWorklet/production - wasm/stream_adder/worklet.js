@@ -30,6 +30,29 @@ class streamAdder extends AudioWorkletProcessor{
             this.port.onmessage = function(event){
                 switch(event.data.command){
                     //wasm initialization
+                        case 'loadUncompiledWasm':
+                            WebAssembly.compile(event.data.value)
+                                .then(WebAssembly.instantiate)
+                                .then(result => {
+                                    self.wasm = result;
+    
+                                    self.input1Frame = {};
+                                    self.input1Frame.pointer = self.wasm.exports.get_input_1_pointer();
+                                    self.input1Frame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.input1Frame.pointer, 128);
+    
+                                    self.input2Frame = {};
+                                    self.input2Frame.pointer = self.wasm.exports.get_input_2_pointer();
+                                    self.input2Frame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.input2Frame.pointer, 128);
+    
+                                    self.mixControlFrame = {};
+                                    self.mixControlFrame.pointer = self.wasm.exports.get_mix_control_pointer();
+                                    self.mixControlFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.mixControlFrame.pointer, 128);
+    
+                                    self.outputFrame = {};
+                                    self.outputFrame.pointer = self.wasm.exports.get_output_pointer();
+                                    self.outputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.outputFrame.pointer, 128);
+                                });
+                        break;
                         case 'loadWasm':
                             WebAssembly.instantiate(event.data.value).then(result => {
                                 self.wasm = result;

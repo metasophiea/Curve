@@ -49,11 +49,11 @@ _canvas_.layers.registerFunctionForLayer("library", function(){
                 // {{include:audioProcessing/audioWorket/8 - lagProcessor.js}} //lagProcessor
                 // {{include:audioProcessing/audioWorket/9 - oscillator.js}} //oscillator
             //production - wasm
-                {{include:audioProcessing/audioWorket/11 - bitcrusher.js}} //bitcrusher with wasm processor
+                // {{include:audioProcessing/audioWorket/11 - bitcrusher.js}} //bitcrusher with wasm processor
                 // {{include:audioProcessing/audioWorket/12 - oscillator_type_1.js}} //simplistic sine-wave oscillator, edition 1
                 // {{include:audioProcessing/audioWorket/3 - sigmoid.js}} //sigmoid with wasm processor
                 // {{include:audioProcessing/audioWorket/13 - integrated_synthesizer_type_1.js}} //a synthesizer in an audio node
-                // {{include:audioProcessing/audioWorket/14 - custom audio_buffer.js}} 
+                {{include:audioProcessing/audioWorket/14 - custom audio_buffer.js}} 
 
         // {{include:audioProcessing/1.js}} //frequency/amplitude measure rig
 

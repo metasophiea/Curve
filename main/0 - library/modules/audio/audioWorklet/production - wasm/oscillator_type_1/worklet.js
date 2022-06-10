@@ -56,6 +56,32 @@ class oscillator_type_1 extends AudioWorkletProcessor {
             this.port.onmessage = function(event){
                 switch(event.data.command){
                     //wasm initialization
+                        case 'loadUncompiledWasm':
+                            WebAssembly.compile(event.data.value).then(module => {
+                                WebAssembly.instantiate(
+                                    module,
+                                    { env: { Math_random: Math.random, debug_: debug, } },
+                                ).then(result => {
+                                    //save wasm processor to instance
+                                        self.wasm = result;
+    
+                                    //assemble wasm buffers
+                                        self.frequencyFrame = { pointer: self.wasm.exports.get_frequency_pointer() };
+                                        self.frequencyFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.frequencyFrame.pointer, 128);
+                                        self.gainFrame = { pointer: self.wasm.exports.get_gain_pointer() };
+                                        self.gainFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.gainFrame.pointer, 128);
+                                        self.detuneFrame = { pointer: self.wasm.exports.get_detune_pointer() };
+                                        self.detuneFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.detuneFrame.pointer, 128);
+                                        self.dutyCycleFrame = { pointer: self.wasm.exports.get_duty_cycle_pointer() };
+                                        self.dutyCycleFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.dutyCycleFrame.pointer, 128);
+                                        self.outputFrame = { pointer: self.wasm.exports.get_output_pointer() };
+                                        self.outputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.outputFrame.pointer, 128);
+    
+                                    //re-send waveform selection (just incase)
+                                        self.wasm.exports.select_waveform(self._state.selected_waveform);
+                                });
+                            });
+                        break;
                         case 'loadWasm':
                             WebAssembly.instantiate(
                                 event.data.value,

@@ -43,6 +43,36 @@ class audio_buffer_type_2 extends AudioWorkletProcessor {
                         break;
 
                     //wasm initialization
+                        case 'loadUncompiledWasm':
+                            WebAssembly.compile(event.data.value).then(module => {
+                                WebAssembly.instantiate(
+                                    module,
+                                    { env: {
+                                        _onEnd: function(playhead_id){ self.port.postMessage({ command:'onEnd', value:playhead_id }); },
+                                        _onLoop: function(playhead_id){ self.port.postMessage({ command:'onLoop', value:playhead_id }); },
+    
+                                        debug_: function(id, ...args){ console.log(id+':', args.join(' ')); },
+                                    } },
+                                ).then(result => {
+                                    //save wasm processor to instance
+                                        self.wasm = result;
+    
+                                    //attach buffers
+                                        self.attachBuffers();
+    
+                                    //assemble additional wasm buffers
+                                        self.audioBufferShovelFrame = { pointer: self.wasm.exports.get_audio_buffer_shovel_pointer() };
+    
+                                    //load data if necessary
+                                        if(self._state.temporaryAudioData != undefined){
+                                            self.transferAudioBufferDataIn(
+                                                self._state.temporaryAudioData
+                                            );
+                                            self._state.temporaryAudioData = undefined;
+                                        }
+                                });
+                            });
+                        break;
                         case 'loadWasm':
                             WebAssembly.instantiate(
                                 event.data.value,
@@ -183,8 +213,10 @@ class audio_buffer_type_2 extends AudioWorkletProcessor {
     }
 
     process(inputs, outputs, parameters){
+        // console.log('>>',this.wasm);
         if(this.shutdown){ return false; }
-        if(this.wasm == undefined){ return true; }
+        if(this.wasm == undefined || this.rateFrame == undefined){ return true; }
+        // console.log('>>',this.rateFrame);
 
         //collect inputs/outputs
             const output = outputs[0];

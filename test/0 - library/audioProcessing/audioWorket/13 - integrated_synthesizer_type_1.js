@@ -40,4 +40,4 @@ setInterval(function(){
 
     // setTimeout(function(){ is_1.perform(219, 0.25); },750);
     // setTimeout(function(){ is_1.perform(219, 0); },1300);
-},1000);
+}, 1000);

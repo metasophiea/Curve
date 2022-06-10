@@ -42,6 +42,36 @@ class audio_buffer_type_1 extends AudioWorkletProcessor {
                         break;
 
                     //wasm initialization
+                        case 'loadUncompiledWasm':
+                            WebAssembly.compile(event.data.value).then(module => {
+                                WebAssembly.instantiate(
+                                    module,
+                                    { env: {
+                                        _onEnd: function(playhead_id){ self.port.postMessage({ command:'onEnd', value:playhead_id }); },
+                                        _onLoop: function(playhead_id){ self.port.postMessage({ command:'onLoop', value:playhead_id }); },
+    
+                                        debug_: function(id, ...args){ console.log(id+':', args.join(' ')); },
+                                    } },
+                                ).then(result => {
+                                    //save wasm processor to instance
+                                        self.wasm = result;
+    
+                                    //attach buffers
+                                        self.attachBuffers();
+    
+                                    //assemble additional wasm buffers
+                                        self.audioBufferShovelFrame = { pointer: self.wasm.exports.get_audio_buffer_shovel_pointer() };
+    
+                                    //load data if necessary
+                                        if(self._state.temporaryAudioData != undefined){
+                                            self.transferAudioBufferDataIn(
+                                                self._state.temporaryAudioData
+                                            );
+                                            self._state.temporaryAudioData = undefined;
+                                        }
+                                });
+                            });
+                        break;
                         case 'loadWasm':
                             WebAssembly.instantiate(
                                 event.data.value,
