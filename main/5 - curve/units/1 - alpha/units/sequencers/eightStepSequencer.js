@@ -105,7 +105,7 @@ this.eightStepSequencer = function(name,x,y,angle){
                                 handleURL:unitStyle.imageStoreURL_localPrefix+'octaveSlideHandle_'+index+'.png',
                             }},
                             {collection:'control', type:'dial_2_continuous',name:'dial_velocity_'+index,data:{
-                                x:17.5 +30*index, y:57.5, radius:(75/6)/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5,
+                                x:17.5 +30*index, y:57.5, radius:(75/6)/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.5, arcDistance:1.2, resetValue:0.5,
                                 style:{ handle:style.primaryEight[index], slot:unitStyle.dial.slot, needle:unitStyle.dial.needle },
                             }},
                             {collection:'control', type:'button_rectangle', name:'button_activate_'+index, data:{
@@ -123,7 +123,7 @@ this.eightStepSequencer = function(name,x,y,angle){
             previousPosition:-1,
             position:-1,
             requestedNextPosition:-1,
-            stages:new Array(8).fill(undefined).map(() => ({note:0, octave:0, velocity:0})),
+            stages:new Array(8).fill(undefined).map(() => ({note:0, octave:0, velocity:0.5})),
             previousMidiNumber:-1,
         };
         function stageToMidiNoteNumber(stage){

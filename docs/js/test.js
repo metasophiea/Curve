@@ -46679,7 +46679,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
             _canvas_.layers.declareLayerAsLoaded("control");
         } );
         _canvas_.curve = new function(){
-            this.versionInformation = { tick:0, lastDateModified:{y:2021,m:2,d:22} };
+            this.versionInformation = { tick:0, lastDateModified:{y:2022,m:8,d:15} };
         };
         
         _canvas_.layers.registerLayer("curve", _canvas_.curve);
@@ -51096,7 +51096,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                                 handleURL:unitStyle.imageStoreURL_localPrefix+'octaveSlideHandle_'+index+'.png',
                                             }},
                                             {collection:'control', type:'dial_2_continuous',name:'dial_velocity_'+index,data:{
-                                                x:17.5 +30*index, y:57.5, radius:(75/6)/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5,
+                                                x:17.5 +30*index, y:57.5, radius:(75/6)/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.5, arcDistance:1.2, resetValue:0.5,
                                                 style:{ handle:style.primaryEight[index], slot:unitStyle.dial.slot, needle:unitStyle.dial.needle },
                                             }},
                                             {collection:'control', type:'button_rectangle', name:'button_activate_'+index, data:{
@@ -51114,7 +51114,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             previousPosition:-1,
                             position:-1,
                             requestedNextPosition:-1,
-                            stages:new Array(8).fill(undefined).map(() => ({note:0, octave:0, velocity:0})),
+                            stages:new Array(8).fill(undefined).map(() => ({note:0, octave:0, velocity:0.5})),
                             previousMidiNumber:-1,
                         };
                         function stageToMidiNoteNumber(stage){
@@ -53041,10 +53041,10 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         function updateOutput(A,B){
                             if(delay > 0){ 
                                 setTimeout(function(){
-                                    object.io.signal.out.set(A || B);
+                                    object.io.signal.out.set(A == B);
                                 },delay);
                             }else{
-                                object.io.signal.out.set(A || B);
+                                object.io.signal.out.set(A == B);
                             }
                         }
                 

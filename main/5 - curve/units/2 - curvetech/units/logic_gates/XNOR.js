@@ -51,10 +51,10 @@ this.XNOR = function(name,x,y,angle){
         function updateOutput(A,B){
             if(delay > 0){ 
                 setTimeout(function(){
-                    object.io.signal.out.set(A || B);
+                    object.io.signal.out.set(A == B);
                 },delay);
             }else{
-                object.io.signal.out.set(A || B);
+                object.io.signal.out.set(A == B);
             }
         }
 

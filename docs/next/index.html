@@ -54,6 +54,15 @@
         <p>I don't know how to do signing yet, so, your anti-virus is not going to be super happy about any of this.</p>
 
         <div id="cards">
+            
+            <div class="card">
+                <h2>Orchestrator</h2>
+                <p>2022-08-15</p>
+                <p>Today, I've come to talk about something called Orchestrator. Orchestrator is a layer of this project that formally brings together all the others, and is the platform upon which applications can be made. It simply is a window manager with a "game loop" style refresh function. It also holds a number of "resources" such as the rendering engine, the audio engine (when that is ready) and in future whatever else is useful. You might find it easier to understand be reviewing this layout of the full system.</p>
+                <img style="width:70%; display:block; margin:auto;" src="/next/images/overall_layout_1.png"></img>
+                <p>Orchestrator uses the winit library for its window generation and interaction needs, along with rfd for file dialogues</p>
+                <p>This is really not a very complex layer, and I think I've actually written all I need to on the subject. Orchestrator just brings together the resources, gives you access to them then gets out of your way. What more could you want?</p>
+            </div>
 
             <div class="card">
                 <h2>Completion Of Rendering Engine</h2>

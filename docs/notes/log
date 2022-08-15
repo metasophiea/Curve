@@ -1,4 +1,9 @@
 ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2022-08-15
+  - small redesign: when created, the eightStepSequencer will have all step
+    velocities set to '0.5' instead of '0.0'
+
+    
 2022-06-10
   - fixed up audio workers. For some reason, its now not possible to transfer
     wasm modules to a worker, so now I'm transferring the wasm code and having
