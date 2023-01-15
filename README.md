@@ -59,4 +59,4 @@ Rewriting the rendering engine in WebAssembly went pretty well - only took 6 mon
 - [Curve Demo 5](https://curve.metasophiea.com?demo=5)
 - [Curve Demo 6](https://curve.metasophiea.com?demo=6)
 
-## [***Curve Next***](https://curve.metasophiea.com/next/)
+## [***Curve Next***](https://alchemy.metasophiea.com)
